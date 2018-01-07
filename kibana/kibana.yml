@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: Template
+message: |-
+  The following service(s) have been created in your project: ${SERVICE_NAME}.
+
+         Username: ${ELASTICSEARCH_USER}
+         Password: ${ELASTICSEARCH_PASSWORD}
+   Kibana URL: https://${ROUTE_PREFIX}.abar.cloud
+
+metadata:
+  annotations:
+    description: |-
+      Kibana v6.1.1 service to connect to an Elasticsearch cluster.
+    iconClass: icon-elastic
+    openshift.io/display-name: Kibana
+    tags: analytics,kibana
+    template.openshift.io/documentation-url: https://docs.abarcloud.com/additional-services/elasticsearch.html#kibana
+    template.openshift.io/provider-display-name: AbarCloud
+  name: kibana
+
+objects:
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: "${SERVICE_NAME}"
+      labels:
+        name: "${SERVICE_NAME}"
+    spec:
+      ports:
+        - name: kibana
+          port: 5601
+      selector:
+        name: "${SERVICE_NAME}"
+
+  - apiVersion: v1
+    kind: Route
+    metadata:
+      name: ${SERVICE_NAME}
+      labels:
+        app: ${SERVICE_NAME}
+      annotations:
+        template.openshift.io/expose-uri: "https://{.spec.host}{.spec.path}"
+    spec:
+      host: ${ROUTE_PREFIX}.abar.cloud
+      port:
+        targetPort: 5601
+      tls:
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+      to:
+        kind: Service
+        name: "${SERVICE_NAME}"
+        weight: 100
+      wildcardPolicy: None
+
+  - kind: DeploymentConfig
+    apiVersion: v1
+    metadata:
+      name: "${SERVICE_NAME}"
+      labels:
+        app: "${SERVICE_NAME}"
+    spec:
+      replicas: 1
+      selector:
+        name: "${SERVICE_NAME}"
+      strategy:
+        type: Rolling
+      template:
+        metadata:
+          labels:
+            name: "${SERVICE_NAME}"
+        spec:
+          containers:
+          - name: kibana
+            image: '172.30.150.55:5000/openshift/kibana:6'
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: ELASTICSEARCH_URL
+              value: ${ELASTICSEARCH_URL}
+            - name: ELASTICSEARCH_USER
+              value: ${ELASTICSEARCH_USER}
+            - name: ELASTICSEARCH_PASSWORD
+              value: ${ELASTICSEARCH_PASSWORD}
+            ports:
+            - containerPort: 5601
+              protocol: TCP
+            livenessProbe:
+              initialDelaySeconds: 60
+              tcpSocket:
+                port: 5601
+              timeoutSeconds: 1
+            readinessProbe:
+              tcpSocket:
+                port: 5601
+              initialDelaySeconds: 3
+              timeoutSeconds: 1
+            resources:
+              limits:
+                memory: ${MEMORY_LIMIT}
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+      triggers:
+      - type: ConfigChange
+
+parameters:
+  - name: SERVICE_NAME
+    displayName: Service Name
+    description: The name used when creating the required deployment config,
+      service etc. Must be unique and contain only lower-case letters.
+    required: true
+    value: kibana
+
+  - name: ROUTE_PREFIX
+    displayName: Route prefix for abar.cloud
+    description: Must be unique across all projects, and contain only lower-case letters, numbers and dashes.
+    required: true
+    value: kibana-myproject
+
+  - name: MEMORY_LIMIT
+    displayName: Memory Limit
+    description: Maximum amount of memory Kibana's container can use, e.g. 500Mi, 1000Mi.
+    required: true
+    value: 1000Mi
+
+  - name: ELASTICSEARCH_URL
+    displayName: Elasticsearch URL
+    description: Based on internal hostname and port. For example http://elasticsearch.myproject.svc:9200
+    required: true
+    value: http://elasticsearch:9200
+
+  - name: ELASTICSEARCH_USER
+    displayName: Elasticsearch User
+    required: true
+    value: elastic
+
+  - name: ELASTICSEARCH_PASSWORD
+    displayName: Elasticsearch Password
+    required: true

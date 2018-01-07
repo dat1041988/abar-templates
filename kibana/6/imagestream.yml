@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: kibana
+
+objects:
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: kibana-v6
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: 'kibana:6'
+    runPolicy: Serial
+    source:
+      git:
+        ref: master
+        uri: 'git@github.com:abarcloud/abar-templates.git'
+      contextDir: 'kibana/6'
+      type: Git
+      sourceSecret:
+        name: 'abarcloud-github-abar-templates'
+    strategy:
+      type: Docker
+    triggers:
+      - type: ConfigChange
+
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations: ~
+    generation: 1
+    name: kibana
