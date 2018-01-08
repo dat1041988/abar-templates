@@ -1,0 +1,123 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: pgweb
+  annotations:
+    openshift.io/display-name: PostgreSQL web client
+    description: Pgweb enables you to view your schema and run full SQL queries from within a web UI.
+    iconClass: icon-postgresql
+    tags: database,postgresql
+message:
+  Once the application is running, you can view it at https://${ROUTE_PREFIX}.abar.cloud
+  For increased security, do not share this URL outside of your team, and scale the deployment to 0 pods when you do not need to access your database.
+objects:
+
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    generation: 1
+    labels:
+      app: pgweb
+    name: pgweb
+  spec:
+    replicas: 1
+    selector:
+      app: pgweb
+      deploymentconfig: pgweb
+    strategy:
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: pgweb
+          deploymentconfig: pgweb
+      spec:
+        containers:
+          - image: sosedoff/pgweb:latest
+            imagePullPolicy: Always
+            name: pgweb
+            ports:
+            - containerPort: 8081
+              protocol: TCP
+            resources:
+              limits:
+                memory: 100Mi
+            livenessProbe:
+              httpGet:
+                path: /
+                port: 8081
+                scheme: HTTP
+              timeoutSeconds: 1
+              initialDelaySeconds: 5
+              periodSeconds: 10
+              successThreshold: 1
+              failureThreshold: 3
+            readinessProbe:
+              httpGet:
+                path: /
+                port: 8081
+                scheme: HTTP
+              timeoutSeconds: 1
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              successThreshold: 1
+              failureThreshold: 3
+            terminationMessagePath: /dev/termination-log
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+    - type: ConfigChange
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+    labels:
+      app: pgweb
+    name: pgweb
+  spec:
+    ports:
+    - name: 8081-tcp
+      port: 8081
+      protocol: TCP
+      targetPort: 8081
+    selector:
+      app: pgweb
+      deploymentconfig: pgweb
+    sessionAffinity: None
+    type: ClusterIP
+
+- apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      app: pgweb
+    name: pgweb
+  spec:
+    host: ${ROUTE_PREFIX}.abar.cloud
+    port:
+      targetPort: 8081-tcp
+    tls:
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+    to:
+      kind: Service
+      name: pgweb
+      weight: 100
+    wildcardPolicy: None
+
+parameters:
+- name: ROUTE_PREFIX
+  displayName: Leave this field empty
+  description: This is used to auto-generate a unique URL
+  generate: expression
+  from: "pgweb-[a-z0-9]{16}"
