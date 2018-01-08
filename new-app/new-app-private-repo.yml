@@ -1,0 +1,207 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: new-app-private-repo
+  annotations:
+    openshift.io/display-name: Private repository - new app
+    description: Create a new application from a private git repository using Docker.
+    iconClass: icon-git
+    tags: featured
+message:
+  Your application's Docker image is being built and will be deployed automatically. Check the buildconfig
+  logs to see the progress. Once it's deployed, you can view it at https://${ROUTE_PREFIX}.abar.cloud
+objects:
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    generation: 1
+    labels:
+      app: ${APP_NAME}
+    name: ${APP_NAME}
+  spec:
+    replicas: 1
+    selector:
+      app: ${APP_NAME}
+      deploymentconfig: ${APP_NAME}
+    strategy:
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: ${APP_NAME}
+          deploymentconfig: ${APP_NAME}
+      spec:
+        containers:
+          - image: ${APP_NAME}:latest
+            imagePullPolicy: Always
+            name: ${APP_NAME}
+            ports:
+            - containerPort: ${PORT}
+              protocol: TCP
+            terminationMessagePath: /dev/termination-log
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${APP_NAME}
+        from:
+          kind: ImageStreamTag
+          name: ${APP_NAME}:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+    labels:
+      app: ${APP_NAME}
+    name: ${APP_NAME}
+  spec:
+    ports:
+    - name: ${PORT}-tcp
+      port: ${PORT}
+      protocol: TCP
+      targetPort: ${{PORT}}
+    selector:
+      app: ${APP_NAME}
+      deploymentconfig: ${APP_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      app: ${APP_NAME}
+    name: ${APP_NAME}
+  spec:
+    host: ${ROUTE_PREFIX}.abar.cloud
+    port:
+      targetPort: ${PORT}-tcp
+    tls:
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+    to:
+      kind: Service
+      name: ${APP_NAME}
+      weight: 100
+    wildcardPolicy: None
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+    generation: 1
+    labels:
+      app: ${APP_NAME}
+    name: ${APP_NAME}
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+    labels:
+      app: ${APP_NAME}
+    name: ${APP_NAME}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APP_NAME}:latest
+    runPolicy: Serial
+    source:
+      git:
+        uri: ${APP_GIT_ADDRESS}
+        ref: ${APP_GIT_BRANCH}
+      type: Git
+      contextDir: ${BUILD_CONTEXT_DIR}
+      sourceSecret:
+        name: ${SOURCE_SECRET_NAME}
+    strategy:
+      type: Docker
+    triggers:
+      - type: ConfigChange
+      - type: GitHub
+        github:
+          secret: ${GITHUB_WEBHOOK_SECRET}
+      - type: GitLab
+        gitlab:
+          secret: ${GITLAB_WEBHOOK_SECRET}
+      - type: BitBucket
+        github:
+          secret: ${BITBUCKET_WEBHOOK_SECRET}
+      - type: Generic
+        generic:
+          secret: ${GENERIC_WEBHOOK_SECRET}
+parameters:
+- name: APP_NAME
+  displayName: Application Name
+  description: The name used when creating the required deployment config, build config, service etc.
+    Must be unique in your project, and contain only lower-case letters and numbers.
+  value: my-app
+  required: true
+- name: APP_GIT_ADDRESS
+  displayName: Git Address
+  description: The git repo address of the app in GitHub, GitLab or BitBucket. Always starts
+    with "git@".
+  value: git@gitlab.com:my_org/my_app.git
+  required: true
+- name: APP_GIT_BRANCH
+  displayName: Git Branch
+  description: The git branch of the repository to use.
+  value: master
+  required: true
+- name: BUILD_CONTEXT_DIR
+  displayName: Dockerfile location
+  description: The relative path to the Dockerfile inside the repository. Leave this blank
+    if the Dockerfile is at the root of the repository.
+  required: false
+- name: PORT
+  displayName: Port exposed in Dockerfile
+  description: The port that's exposed in the Dockerfile. If more than one port is required, the
+    deployment config, service and route need to be edited manually after creation.
+  value: "8080"
+  required: true
+- name: SOURCE_SECRET_NAME
+  displayName: Source Secret Name
+  description: The name of the secret that contains your private SSH Key. If you haven't
+    added it AbarCloud, goto Resources > Secrets from the main menu then click on Create Secret.
+    Select 'Source Secret' for Secret Type, give the key a name, 'SSH Key' for Authentication Type,
+    upload your key and tick the 'Link secret to a service account' option, and select
+    'builder'. Put the key name here.
+  required: true
+- name: ROUTE_PREFIX
+  displayName: Route prefix for abar.cloud
+  description: Each app gets a free abar.cloud domain, such as myapp-myproject.abar.cloud.
+    Must be unique across all projects, and contain only lower-case letters, numbers and dashes.
+    If it's not needed, you can delete the route from Applications > Routes.
+  value: myapp-myproject
+  required: true
+- name: GITHUB_WEBHOOK_SECRET
+  displayName: Leave this field empty
+  description: This is used to auto-generate a token for use with GitHub web hooks
+  generate: expression
+  from: "[a-zA-Z0-9]{20}"
+- name: GITLAB_WEBHOOK_SECRET
+  displayName: Leave this field empty
+  description: This is used to auto-generate a token for use with GitLab web hooks
+  generate: expression
+  from: "[a-zA-Z0-9]{20}"
+- name: BITBUCKET_WEBHOOK_SECRET
+  displayName: Leave this field empty
+  description: This is used to auto-generate a token for use with BitBucket web hooks
+  generate: expression
+  from: "[a-zA-Z0-9]{20}"
+- name: GENERIC_WEBHOOK_SECRET
+  displayName: Leave this field empty
+  description: This is used to auto-generate a token for use with generic web hooks
+  generate: expression
+  from: "[a-zA-Z0-9]{20}"
