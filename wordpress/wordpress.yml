@@ -1,0 +1,225 @@
+apiVersion: v1
+kind: Template
+message: |-
+  Your WordPress installation will be available at: https://${ROUTE_PREFIX}.abar.cloud. It might take a few minutes to become available.
+  For more information about using this template, see https://docs.abarcloud.com/additional-services/wordpress.html
+metadata:
+  annotations:
+    description: |-
+      WordPress v4.8 (on PHP 7.1) is an open-source Content Management System based on PHP. For more information about using this template, see https://docs.abarcloud.com/additional-services/wordpress.html.
+    iconClass: icon-wordpress
+    openshift.io/display-name: WordPress
+    tags: cms,wordpress
+    template.openshift.io/documentation-url: https://docs.abarcloud.com/additional-services/wordpress.html
+    template.openshift.io/long-description: This template provides a new blank WordPress site. It assumes that the MySQL database has already been provisioned.
+    template.openshift.io/provider-display-name: AbarCloud
+  name: wordpress
+
+objects:
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${SERVICE_NAME}
+  stringData:
+    mysql-host: ${MYSQL_HOST}:${MYSQL_PORT}
+    mysql-user: ${MYSQL_USER}
+    mysql-password: ${MYSQL_PASSWORD}
+    mysql-db-name: ${MYSQL_DB_NAME}
+    wordpress-table-prefix: ${WORDPRESS_TABLE_PREFIX}
+
+- apiVersion: v1
+  kind: Route
+  metadata:
+    name: ${SERVICE_NAME}
+    labels:
+      app: ${SERVICE_NAME}
+    annotations:
+      template.openshift.io/expose-uri: "https://{.spec.host}{.spec.path}"
+  spec:
+    host: ${ROUTE_PREFIX}.abar.cloud
+    port:
+      targetPort: 8080
+    tls:
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+    to:
+      kind: Service
+      name: wordpress
+      weight: 100
+    wildcardPolicy: None
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${SERVICE_NAME}
+    labels:
+      app: ${SERVICE_NAME}
+  spec:
+    ports:
+    - name: apache
+      nodePort: 0
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      name: ${SERVICE_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${SERVICE_NAME}-webroot
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: ${VOLUME_CAPACITY}
+
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name: ${SERVICE_NAME}
+    labels:
+      app: ${SERVICE_NAME}
+  spec:
+    replicas: 1
+    selector:
+      name: ${SERVICE_NAME}
+    strategy:
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          name: ${SERVICE_NAME}
+      spec:
+        containers:
+        - env:
+          - name: WORDPRESS_DB_HOST
+            valueFrom:
+              secretKeyRef:
+                key: mysql-host
+                name: ${SERVICE_NAME}
+          - name: WORDPRESS_DB_USER
+            valueFrom:
+              secretKeyRef:
+                key: mysql-user
+                name: ${SERVICE_NAME}
+          - name: WORDPRESS_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: mysql-password
+                name: ${SERVICE_NAME}
+          - name: WORDPRESS_DB_NAME
+            valueFrom:
+              secretKeyRef:
+                key: mysql-db-name
+                name: ${SERVICE_NAME}
+          - name: WORDPRESS_TABLE_PREFIX
+            valueFrom:
+              secretKeyRef:
+                key: wordpress-table-prefix
+                name: ${SERVICE_NAME}
+          livenessProbe:
+            initialDelaySeconds: 30
+            tcpSocket:
+              port: 8080
+            timeoutSeconds: 1
+          name: wordpress
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 3
+            timeoutSeconds: 1
+          resources:
+            limits:
+              memory: ${MEMORY_LIMIT}
+          securityContext:
+            capabilities: {}
+            privileged: false
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - name: wordpress-webroot
+            mountPath: /var/www/html
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        volumes:
+        - name: wordpress-webroot
+          persistentVolumeClaim:
+            claimName: ${SERVICE_NAME}-webroot
+    triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: false
+        containerNames:
+          - "${SERVICE_NAME}"
+        from:
+          kind: ImageStreamTag
+          name: 'wordpress:4.8-php7.1-apache'
+          namespace: %NAMESPACE_HERE% # will be replaced via Makefile
+
+parameters:
+
+- name: MEMORY_LIMIT
+  displayName: Memory Limit
+  description: Maximum amount of memory the container can use, e.g. 300Mi, 1Gi, 2Gi. This
+    can be modified later in the DeploymentConfig. We recommend a minimum of 200Mi.
+  required: true
+  value: 200Mi
+
+- name: SERVICE_NAME
+  displayName: Service Name
+  description: The name used when creating the required deployment config, route, service etc
+    Must be unique and contain only lower-case letters.
+  required: true
+  value: wordpress
+
+- name: VOLUME_CAPACITY
+  displayName: Volume Capacity
+  description: Volume space available for WordPress source code and content, e.g. 2Gi, 5Gi.
+  required: true
+  value: 2Gi
+
+- name: MYSQL_HOST
+  displayName: MySQL Host
+  description: The hostname of the MySQL database to create the required WordPress tables.
+  required: true
+
+- name: MYSQL_PORT
+  displayName: MySQL Port
+  description: The port of the MySQL database if different from the default MySQL port.
+  required: true
+  value: "3306"
+
+- name: MYSQL_USER
+  displayName: MySQL User
+  description: The username used to connect to the MySQL database.
+  required: true
+
+- name: MYSQL_PASSWORD
+  displayName: MySQL Password
+  description: The password used to connect to the MySQL database
+  required: true
+
+- name: MYSQL_DB_NAME
+  displayName: MySQL DB Name
+  description: The database used to create the required WordPress tables.
+  required: true
+  value: wordpress
+
+- name: WORDPRESS_TABLE_PREFIX
+  displayName: WordPress Table Prefix
+  description: The prefix to use for any WordPress tables, e.g "wp_". This defaults to using no prefix.
+  required: false
+
+- name: ROUTE_PREFIX
+  displayName: Route prefix for abar.cloud
+  description: Each app gets a free abar.cloud domain, such as myapp-myproject.abar.cloud.
+    Must be unique across all projects, and contain only lower-case letters, numbers and dashes.
+  value: myapp-myproject
+  required: true
