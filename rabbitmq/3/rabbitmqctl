@@ -1,0 +1,3 @@
+#!/bin/bash
+
+/abar-entrypoint.sh rabbitmqctl-original "$@"

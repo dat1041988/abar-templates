@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Template
+objects:
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: rabbitmq-v3-management
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: 'rabbitmq:3.6-management'
+    runPolicy: Serial
+    source:
+      git:
+        ref: master
+        uri: 'git@github.com:abarcloud/abar-templates.git'
+      contextDir: 'rabbitmq/3'
+      type: Git
+      sourceSecret:
+        name: 'abarcloud-github-abar-templates'
+    strategy:
+      type: Docker
+    triggers:
+      - type: ConfigChange
+
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations: ~
+    generation: 1
+    name: rabbitmq
