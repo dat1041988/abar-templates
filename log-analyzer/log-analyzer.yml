@@ -1,0 +1,111 @@
+apiVersion: v1
+kind: Template
+message: |-
+  A DeploymentConfig named "log-analyzer" has been created in your project.
+
+  Use "oc rsh -t dc/log-analyzer entrypoint.sh helper.sh bash" to get a shell inside and analyze the logs.
+
+  Please refer to https://docs.abarcloud.com/management/logs.html#load-balancer-logs for usage documentation.
+metadata:
+  name: log-analyzer
+  annotations:
+    description: |-
+      Log Analyzer helps you analyze load balancer logs
+    iconClass: icon-logs
+    openshift.io/display-name: Log Analyzer
+    tags: logs,analyzer
+    template.openshift.io/documentation-url: https://docs.abarcloud.com/management/logs.html
+    template.openshift.io/provider-display-name: AbarCloud
+
+objects:
+
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    generation: 1
+    labels:
+      app: log-analyzer
+    name: log-analyzer
+  spec:
+    replicas: 1
+    selector:
+      app: log-analyzer
+      deploymentconfig: log-analyzer
+    strategy:
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: log-analyzer
+          deploymentconfig: log-analyzer
+      spec:
+        containers:
+          - image: " "
+            imagePullPolicy: Always
+            name: log-analyzer
+            env:
+            - name: OSS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: access-key-id
+                  name: ${OSS_LOGS_BUCKET_SECRET}
+            - name: OSS_ACCESS_KEY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: access-key-secret
+                  name: ${OSS_LOGS_BUCKET_SECRET}
+            - name: OSS_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  key: endpoint
+                  name: ${OSS_LOGS_BUCKET_SECRET}
+            - name: OSS_BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: bucket-name
+                  name: ${OSS_LOGS_BUCKET_SECRET}
+            - name: OSS_LOGS_DIR
+              valueFrom:
+                secretKeyRef:
+                  key: logs-dir
+                  name: ${OSS_LOGS_BUCKET_SECRET}
+            resources:
+              limits:
+                memory: ${MEMORY_LIMIT}
+            terminationMessagePath: /dev/termination-log
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - log-analyzer
+        from:
+          kind: ImageStreamTag
+          name: 'log-analyzer:1'
+          namespace: %NAMESPACE_HERE% # will be replaced via Makefile
+
+parameters:
+
+- name: MEMORY_LIMIT
+  displayName: Memory Limit
+  description: To analyze logs smaller than ~300K requests 1Gi is enough. Use 2Gi if you want to analyze ~800K requests.
+  required: true
+  value: 1Gi
+
+- displayName: OSS Credentials Secret
+  description: The name of the secret containing OSS credentials for accessing your logs. This is provided to you by AbarCloud.
+  name: OSS_LOGS_BUCKET_SECRET
+  required: true
+  value: oss-logs-bucket

@@ -4,18 +4,18 @@ objects:
 - apiVersion: v1
   kind: BuildConfig
   metadata:
-    name: kibana-v6
+    name: log-analyzer-v1
   spec:
     output:
       to:
         kind: ImageStreamTag
-        name: 'kibana:6'
+        name: 'log-analyzer:1.0'
     runPolicy: Serial
     source:
       git:
         ref: master
         uri: 'git@github.com:abarcloud/abar-templates.git'
-      contextDir: 'kibana/6'
+      contextDir: 'log-analyzer/1'
       type: Git
       sourceSecret:
         name: 'abarcloud-github-abar-templates'
@@ -29,4 +29,14 @@ objects:
   metadata:
     annotations: ~
     generation: 1
-    name: kibana
+    name: log-analyzer
+  spec:
+    tags:
+    - name: latest
+      annotations:
+        openshift.io/display-name: Log Analyzer (Latest)
+        iconClass: icon-log
+        tags: log,analyzer
+      from:
+        kind: ImageStreamTag
+        name: '1.0'

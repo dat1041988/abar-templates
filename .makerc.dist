@@ -1,0 +1,3 @@
+# All Templates, BuildConfigs and ImageStreams will be created in this namespace.
+# To customize namespace for development, copy this file as .makerc and replace namespace below.
+NAMESPACE=openshift
