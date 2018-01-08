@@ -21,3 +21,6 @@ To create/update all `Template`s run:
 ```sh
 make templates
 ```
+
+### MIT License
+AbarCloud loves open-source and always gives back to community.

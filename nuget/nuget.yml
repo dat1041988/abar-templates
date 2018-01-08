@@ -1,0 +1,206 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: nuget
+  annotations:
+    openshift.io/display-name: NuGet
+    description: NuGet package manager for .NET and .NET Core with persistent storage.
+      Scaling to more than one replica is not supported.
+    iconClass: icon-dotnet
+    tags: database,nuget
+objects:
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+    generation: 1
+    labels:
+      app: ${NUGET_NAME}
+    name: ${NUGET_NAME}
+  spec:
+    replicas: 1
+    selector:
+      app: ${NUGET_NAME}
+      deploymentconfig: ${NUGET_NAME}
+    strategy:
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        annotations:
+          openshift.io/container.nuget.image.entrypoint: '["/bin/sh","/var/www/entrypoint.sh"]'
+        creationTimestamp: null
+        labels:
+          app: ${NUGET_NAME}
+          deploymentconfig: ${NUGET_NAME}
+      spec:
+        containers:
+        - env:
+          - name: NUGET_API_KEY
+            value: ${NUGET_API_KEY}
+          image: ' '
+          imagePullPolicy: Always
+          name: ${NUGET_NAME}
+          ports:
+          - containerPort: 443
+            protocol: TCP
+          - containerPort: 80
+            protocol: TCP
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /var/www/db
+            name: volume-db
+          - mountPath: /var/www/packagefiles
+            name: volume-packagefiles
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: volume-db
+          persistentVolumeClaim:
+            claimName: ${NUGET_NAME}-db
+        - name: volume-packagefiles
+          persistentVolumeClaim:
+            claimName: ${NUGET_NAME}-packages
+    test: false
+    triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${NUGET_NAME}
+        from:
+          kind: ImageStreamTag
+          name: ${NUGET_NAME}:latest
+          namespace: ${PROJECT_NAME}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+    creationTimestamp: null
+    labels:
+      app: ${NUGET_NAME}
+      url: ${NUGET_NAME}.${PROJECT_NAME}.svc.cluster.local
+    name: ${NUGET_NAME}
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: ${NUGET_NAME}
+      deploymentconfig: ${NUGET_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: v1
+  kind: Route
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${NUGET_NAME}
+    name: ${NUGET_NAME}
+  spec:
+    host: ${NUGET_ROUTE_PREFIX}.abar.cloud
+    port:
+      targetPort: 8080-tcp
+    tls:
+      termination: edge
+    to:
+      kind: Service
+      name: ${NUGET_NAME}
+      weight: 100
+    wildcardPolicy: None
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: ${NUGET_NAME}
+    name: ${NUGET_NAME}
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+    creationTimestamp: null
+    labels:
+      app: ${NUGET_NAME}
+    name: ${NUGET_NAME}
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${NUGET_NAME}:latest
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      git:
+        uri: https://github.com/abarcloud/abar-templates.git
+      contextDir: 'nuget/source'
+      type: Git
+    strategy:
+      type: Docker
+    triggers:
+      - type: ConfigChange
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${NUGET_NAME}-db
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: 1Gi
+  status: {}
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${NUGET_NAME}-packages
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: ${NUGET_PACKAGES_CAPACITY}
+parameters:
+- name: PROJECT_NAME
+  displayName: Project Name
+  description: The project name, also known as namespace, where NuGet is being deployed.
+  required: true
+- name: NUGET_NAME
+  displayName: NuGet Service Name
+  description: The name used when creating the required deployment config, build config, service etc.
+    Must be unique and contain only lower-case letters.
+  value: nuget
+  required: true
+- name: NUGET_API_KEY
+  displayName: NuGet API Key
+  description: NuGet API key to use for pushing and deleting packages. Anyone
+    with this key will be able to push/delete packages so please use a random/long
+    key. Leave this empty if you'd like it to be auto-generated.
+  generate: expression
+  from: "[a-zA-Z0-9]{32}"
+- name: NUGET_PACKAGES_CAPACITY
+  displayName: NuGet Packages Capacity
+  description: Volume capacity for NuGet packages. Use a larger value if you have
+    a lot of packages or the packages are large.
+  value: 2Gi
+  required: true
+- name: NUGET_ROUTE_PREFIX
+  displayName: NuGet Route Prefix
+  description: NuGet route prefix that will be used to create the URL for NuGet.
+    Anyone with this URL will be able to pull packages so please use a random/long
+    prefix if you'd like the URL to be secret. Leave this empty if you'd like it
+    to be auto-generated.
+  generate: expression
+  from: "[a-z0-9]{32}"
