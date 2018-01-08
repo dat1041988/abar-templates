@@ -26,4 +26,4 @@ make templates
 ```
 
 ### MIT License
-AbarCloud loves open-source and always gives back to community.
+AbarCloud loves open-source and contributing back to the community.
