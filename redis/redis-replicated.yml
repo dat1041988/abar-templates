@@ -1,0 +1,162 @@
+apiVersion: v1
+kind: Template
+message: |-
+  The following service have been created in your project: ${SERVICE_NAME}-sentinel.
+
+         Password: ${REDIS_PASSWORD}
+    Sentinel Host: ${SERVICE_NAME}-sentinel
+    Sentinel Port: 26379
+
+  To scale your Redis Replication use command below:
+  $ oc scale statefulset redis --replicas=X
+
+  You must use a Sentinel-aware Redis client, and you should provide only one sentinel address
+  (as mentioned above) to your client. This service is a proxy to all Sentinel pods.
+
+  * NodeJS Redis Sentinel: https://github.com/luin/ioredis#sentinel
+  * PHP Redis Sentinel: https://github.com/jamescauwelier/PSRedis
+  * Laravel Redis Sentinel: https://github.com/monospice/laravel-redis-sentinel-drivers
+metadata:
+  name: redis-replicated
+  annotations:
+    description: |-
+      Redis v4.0.6 in-memory data structure store, in a Sentinel-based Master/Slave Replication setup, with persistent storage.
+
+      We recommend a minimum of 3 replicas to ensure high-availability.
+    iconClass: icon-redis
+    openshift.io/display-name: Redis with storage - replicated
+    tags: database,redis
+    template.openshift.io/provider-display-name: AbarCloud
+
+objects:
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${SERVICE_NAME}
+  stringData:
+    database-password: ${REDIS_PASSWORD}
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${SERVICE_NAME}-sentinel
+    labels:
+      app: ${SERVICE_NAME}
+  spec:
+    ports:
+      - port: 26379
+        targetPort: 26379
+    selector:
+      app: ${SERVICE_NAME}
+      sentinel: "true"
+
+- apiVersion: apps/v1beta1
+  kind: StatefulSet
+  metadata:
+    name: ${SERVICE_NAME}
+  spec:
+    serviceName: ${SERVICE_NAME}
+    replicas: 3
+    template:
+      metadata:
+        labels:
+          app: ${SERVICE_NAME}
+          sentinel: "true"
+      spec:
+        terminationGracePeriodSeconds: 10
+        dnsPolicy: ClusterFirst
+        containers:
+        - name: ${SERVICE_NAME}
+          image: "172.30.150.55:5000/openshift/redis:4"
+          imagePullPolicy: Always
+          env:
+          - name: SENTINEL_HOST
+            value: ${SERVICE_NAME}-sentinel
+          - name: SENTINEL_PORT
+            value: 26379
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: database-password
+                name: ${SERVICE_NAME}
+          - name: QUORUM
+            value: 2
+          - name: REDIS_MAXMEMORY
+            valueFrom:
+              resourceFieldRef:
+                divisor: '0'
+                resource: limits.memory
+          - name: REDIS_MAXMEMORY_POLICY
+            value: ${REDIS_MAXMEMORY_POLICY}
+          ports:
+          - containerPort: 6379
+          - containerPort: 26379
+          resources:
+            limits:
+              memory: ${MEMORY_LIMIT}
+          volumeMounts:
+          - name: ${SERVICE_NAME}-data
+            mountPath: /data
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - "redis-cli -a $REDIS_PASSWORD -p 26379 PING && redis-cli -a $REDIS_PASSWORD -p 6379 PING"
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - "redis-cli -a $REDIS_PASSWORD -p 26379 PING && redis-cli -a $REDIS_PASSWORD -p 6379 PING"
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 10
+    volumeClaimTemplates:
+    - metadata:
+        name: ${SERVICE_NAME}-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: ${VOLUME_CAPACITY}
+
+#
+# Parameters
+#
+parameters:
+- displayName: Service Name
+  description: The name used when creating the required StatefulSet, Secret, Service etc. Must be unique and contain only lower-case letters.
+  name: SERVICE_NAME
+  required: true
+  value: redis-ha
+- displayName: Redis Connection Password
+  description: Password for the Redis connection user. Leave this empty if you'd like
+    it to be auto-generated.
+  from: '[a-zA-Z0-9]{16}'
+  generate: expression
+  name: REDIS_PASSWORD
+  required: true
+- displayName: Volume Capacity
+  description: Volume space available for data, e.g. 1Gi, 5Gi. This should be the greater than value of memory.
+  name: VOLUME_CAPACITY
+  required: true
+  value: 1Gi
+- displayName: Memory Limit
+  description: Maximum amount of memory the container can use, e.g. 200Mi, 500Mi, 1Gi. This
+    can be modified later in the DeploymentConfig.
+  name: MEMORY_LIMIT
+  required: true
+  value: 100Mi
+- displayName: Max-memory Policy
+  description: |-
+      Tells Redis slaves how to behave when exceeding the available maxmemory.
+      Available options are: noeviction, volatile-lfu, allkeys-lfu, allkeys-lru, volatile-lru, allkeys-random, volatile-random, volatile-ttl
+
+      Read more at https://redis.io/topics/lru-cache#eviction-policies
+  name: REDIS_MAXMEMORY_POLICY
+  required: true
+  value: noeviction

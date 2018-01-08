@@ -1,0 +1,167 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: redis-with-storage-single-node
+  creationTimestamp:
+  annotations:
+    openshift.io/display-name: Redis with storage - single node
+    description: |-
+      Redis v4.0.6 in-memory data structure store, with persistent storage.
+
+      Scaling to more than one replica is not supported.
+    iconClass: icon-redis
+    tags: database,redis
+    template.openshift.io/long-description: This template provides a standalone Redis
+      server.  The data is stored on persistent storage.
+    template.openshift.io/provider-display-name: AbarCloud
+message: |-
+  The following service(s) have been created in your project: ${SERVICE_NAME}.
+
+         Password: ${REDIS_PASSWORD}
+   Connection URL: redis://${SERVICE_NAME}:6379/
+
+  For more information about using this template see https://github.com/sclorg/redis-container/blob/master/3.2.
+objects:
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: "${SERVICE_NAME}"
+  stringData:
+    database-password: "${REDIS_PASSWORD}"
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: "${SERVICE_NAME}"
+    creationTimestamp:
+  spec:
+    ports:
+    - name: redis
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+      nodePort: 0
+    selector:
+      name: "${SERVICE_NAME}"
+    type: ClusterIP
+    sessionAffinity: None
+  status:
+    loadBalancer: {}
+
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: "${SERVICE_NAME}"
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: "${VOLUME_CAPACITY}"
+
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name: "${SERVICE_NAME}"
+    creationTimestamp:
+  spec:
+    strategy:
+      type: Recreate
+    triggers:
+    - type: ConfigChange
+    replicas: 1
+    selector:
+      name: "${SERVICE_NAME}"
+    template:
+      metadata:
+        creationTimestamp:
+        labels:
+          name: "${SERVICE_NAME}"
+      spec:
+        containers:
+        - name: redis
+          image: "172.30.150.55:5000/openshift/redis:4"
+          ports:
+          - containerPort: 6379
+            protocol: TCP
+          readinessProbe:
+            timeoutSeconds: 1
+            initialDelaySeconds: 5
+            exec:
+              command:
+              - "/bin/sh"
+              - "-i"
+              - "-c"
+              - test "$(redis-cli -h 127.0.0.1 -a $REDIS_PASSWORD ping)" == "PONG"
+          livenessProbe:
+            timeoutSeconds: 1
+            initialDelaySeconds: 30
+            tcpSocket:
+              port: 6379
+          env:
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: "${SERVICE_NAME}"
+                key: database-password
+          - name: REDIS_MAXMEMORY
+            valueFrom:
+              resourceFieldRef:
+                divisor: '0'
+                resource: limits.memory
+          - name: REDIS_MAXMEMORY_POLICY
+            value: ${REDIS_MAXMEMORY_POLICY}
+          resources:
+            limits:
+              memory: "${MEMORY_LIMIT}"
+          volumeMounts:
+          - name: "${SERVICE_NAME}-data"
+            mountPath: "/var/lib/redis/data"
+          terminationMessagePath: "/dev/termination-log"
+          imagePullPolicy: IfNotPresent
+          capabilities: {}
+          securityContext:
+            capabilities: {}
+            privileged: false
+        volumes:
+        - name: "${SERVICE_NAME}-data"
+          persistentVolumeClaim:
+            claimName: "${SERVICE_NAME}"
+        restartPolicy: Always
+        dnsPolicy: ClusterFirst
+  status: {}
+
+parameters:
+- name: MEMORY_LIMIT
+  displayName: Memory Limit
+  description: Maximum amount of memory the container can use, e.g. 500Mi, 1Gi. This
+    can be modified later in the DeploymentConfig.
+  value: 100Mi
+  required: true
+- name: SERVICE_NAME
+  displayName: Service Name
+  description: The name used when creating the required deployment config, build config,
+    service etc. Must be unique and contain only lower-case letters.
+  value: redis
+  required: true
+- name: REDIS_PASSWORD
+  displayName: Redis Connection Password
+  description: Password for the Redis connection user. Leave this empty if you'd like
+    it to be auto-generated.
+  generate: expression
+  from: "[a-zA-Z0-9]{16}"
+  required: true
+- name: VOLUME_CAPACITY
+  displayName: Volume Capacity
+  description: Volume space available for data, e.g. 1Gi, 5Gi.
+  value: 1Gi
+  required: true
+- displayName: Max-memory Policy
+  description: |-
+      Tells Redis slaves how to behave when exceeding the available maxmemory.
+      Available options are: noeviction, volatile-lfu, allkeys-lfu, allkeys-lru, volatile-lru, allkeys-random, volatile-random, volatile-ttl
+
+      Read more at https://redis.io/topics/lru-cache#eviction-policies
+  name: REDIS_MAXMEMORY_POLICY
+  required: true
+  value: noeviction
