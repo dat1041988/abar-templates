@@ -1,0 +1,200 @@
+apiVersion: v1
+kind: Template
+message: |-
+  The following service(s) have been created in your project: ${SERVICE_NAME}.
+
+         Username: elastic
+         Password: ${INITIAL_ELASTIC_PASSWORD}
+           Server: http://${SERVICE_NAME}
+   Connection URL: elastic:${INITIAL_ELASTIC_PASSWORD}@${SERVICE_NAME}
+
+  NOTE: Please *email us* your project name so we can enable a special setting that's required, see https://docs.abarcloud.com/support.html.
+
+  Change the password before exposing this service externally. For more information about using this template, see https://docs.abarcloud.com/additional-services/elasticsearch.html.
+metadata:
+  annotations:
+    description: |-
+      Elasticsearch v6.1.1 service, with persistent storage. For more information about using this template, see https://docs.abarcloud.com/additional-services/elasticsearch.html.
+
+      NOTE: We recommend at least 3 replicas for production
+    iconClass: icon-elastic
+    openshift.io/display-name: Elasticsearch - replicated
+    tags: database,elasticsearch
+    template.openshift.io/documentation-url: https://docs.abarcloud.com/additional-services/elasticsearch.html
+    template.openshift.io/long-description: This template provides a replicated Elasticsearch service.
+    template.openshift.io/provider-display-name: AbarCloud
+  name: elasticsearch-replicated
+
+objects:
+  - kind: ConfigMap
+    apiVersion: v1
+    metadata:
+      name: "${SERVICE_NAME}-config"
+    data:
+      elasticsearch.yml: |+
+        cluster.name: ${SERVICE_NAME}
+        node.name: ${HOSTNAME}
+        network.host: 0.0.0.0
+
+        # Enable for memory locking and disable swap for containers
+        # for better performance and stable ES clusters
+        #bootstrap.memory_lock: true
+        #bootstrap.mlockall: true
+
+        discovery.zen.ping.unicast.hosts: ["${SERVICE_NAME}-discovery"]
+
+        # minimum_master_nodes need to be explicitly set when bound on a public IP
+        # set to 1 to allow single node clusters
+        # Details: https://github.com/elastic/elasticsearch/pull/17288
+        discovery.zen.minimum_master_nodes: ${MINIMUM_MASTER_NODES}
+        xpack.monitoring.history.duration: 1d
+
+  # A non-headless service which takes pod readiness into consideration
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: "${SERVICE_NAME}"
+      annotations:
+        service.alpha.openshift.io/dependencies: '[{"name":"${SERVICE_NAME}-discovery","namespace":"","kind":"Service"}]'
+      labels:
+        name: "${SERVICE_NAME}"
+    spec:
+      # the list of ports that are exposed by this service
+      ports:
+        - name: elasticsearch
+          port: 9200
+      # will route traffic to pods having labels matching this selector
+      selector:
+        name: "${SERVICE_NAME}"
+
+  # A headless service to create DNS records for service discovery
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: "${SERVICE_NAME}-discovery"
+      annotations:
+        service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+      labels:
+        name: "${SERVICE_NAME}"
+    spec:
+      clusterIP: None
+      # the list of ports that are exposed by this service
+      ports:
+        - name: elasticsearch
+          port: 9300
+      # will route traffic to pods having labels matching this selector
+      selector:
+        name: "${SERVICE_NAME}"
+
+  - kind: StatefulSet
+    apiVersion: apps/v1beta1
+    metadata:
+      name: "${SERVICE_NAME}"
+      labels:
+        name: "${SERVICE_NAME}"
+    spec:
+      # pets get DNS/hostnames that follow the pattern: ${metadata.name}-NUM.${spec.serviceName}.default.svc.cluster.local
+      serviceName: "${SERVICE_NAME}"
+      replicas: ${ELASTIC_NODE_COUNT}
+      # describes the pod that will be created if insufficient replicas are detected
+      template:
+        metadata:
+          # this label will be used for count running pods
+          labels:
+            name: "${SERVICE_NAME}"
+        spec:
+          containers:
+            - name: elasticsearch
+              image: "docker.elastic.co/elasticsearch/elasticsearch:6.1.1"
+              imagePullPolicy: IfNotPresent
+              ports:
+                - containerPort: 9200
+                - containerPort: 9300
+              volumeMounts:
+                - name: elasticsearch-data
+                  mountPath: "/usr/share/elasticsearch/data"
+                - name: elasticsearch-conf
+                  mountPath: "/usr/share/elasticsearch/config/elasticsearch.yml"
+                  subPath: elasticsearch.yml
+              env:
+                - name: TAKE_FILE_OWNERSHIP
+                  value: "true"
+                - name: ES_JAVA_OPTS
+                  value: ${ELASTICSEARCH_JAVA_OPTS}
+                - name: ELASTIC_PASSWORD
+                  value: ${INITIAL_ELASTIC_PASSWORD}
+              resources:
+                limits:
+                  memory: "${MEMORY_LIMIT}"
+              livenessProbe:
+                initialDelaySeconds: 30
+                tcpSocket:
+                  port: 9300
+                timeoutSeconds: 1
+              readinessProbe:
+                initialDelaySeconds: 30
+                tcpSocket:
+                  port: 9300
+                timeoutSeconds: 1
+          volumes:
+            - name: elasticsearch-conf
+              configMap:
+                name: "${SERVICE_NAME}-config"
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            # the volume can be mounted as read-write by a single node
+            accessModes: [ ReadWriteOnce ]
+            resources:
+              requests:
+                storage: "${VOLUME_CAPACITY}"
+
+parameters:
+  - name: INITIAL_ELASTIC_PASSWORD
+    displayName: Initial Elastic Password
+    description: To access your cluster, this initial password is set for the "elastic" user. Leave this empty if you'd like it to be auto-generated.
+    required: true
+    from: '[a-zA-Z0-9]{16}'
+    generate: expression
+
+  - name: MEMORY_LIMIT
+    displayName: Memory Limit
+    description: Maximum amount of memory each Elasticsearch container can use, e.g. 1Gi, 2Gi.
+      This can be modified later in the StatefulSet.
+    required: true
+    value: 1Gi
+
+  - name: ELASTIC_NODE_COUNT
+    displayName: Elasticsearch Node Count
+    description: Number of Elasticsearch nodes to create. We recommend at least 3 for high-availability.
+    required: true
+    value: "3"
+
+  - name: MINIMUM_MASTER_NODES
+    displayName: Minimum number of master nodes
+    description: Minimum number of master eligible nodes that need to join a newly elected master in order
+      for an election to complete and for the elected node to accept its mastership. We recommend this is
+      set to 2 when the Elasticsearch Node Count is set to 3. Refer to the Elasticsearch docs for more details.
+    required: true
+    value: "2"
+
+  - name: SERVICE_NAME
+    displayName: Service Name
+    description: The name used when creating the required deployment config, build config,
+      service etc. Must be unique and contain only lower-case letters.
+    required: true
+    value: elasticsearch
+
+  - name: VOLUME_CAPACITY
+    displayName: Volume Capacity
+    description: Volume space available for data, e.g. 2Gi, 5Gi.
+    required: true
+    value: 1Gi
+
+  - name: ELASTICSEARCH_JAVA_OPTS
+    displayName: Elasticsearch Java Opts
+    description: Java Options for Elasticsearch, separated by a space, e.g. -Xms512m -Xmx512m, -Xms1g -Xmx1g.
+      We recommend setting the Java Xms/Xmx values to around half of the memory limit.
+    required: true
+    value: -Xms512m -Xmx512m
