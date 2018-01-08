@@ -1,0 +1,354 @@
+apiVersion: v1
+kind: Template
+message: |-
+  The following service(s) have been created in your project: ${SERVICE_NAME}.
+
+         Username: ${MONGODB_USER}
+         Password: ${MONGODB_PASSWORD}
+    Database Name: ${MONGODB_DATABASE}
+   Connection URL: mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@${SERVICE_NAME}/${MONGODB_DATABASE}
+
+  For more information about using this template, see https://docs.abarcloud.com/additional-services/mongodb.html.
+metadata:
+  annotations:
+    description: |-
+      MongoDB v3.2 replicated database service, with persistent storage. For more information about using this template, see https://docs.abarcloud.com/additional-services/mongodb.html.
+
+      NOTE: We recommend at least 3 replicas to guarantee data reliability
+    iconClass: icon-mongodb
+    openshift.io/display-name: MongoDB - replicated
+    tags: database,mongodb
+    template.openshift.io/documentation-url: https://docs.abarcloud.com/additional-services/mongodb.html
+    template.openshift.io/long-description: This template provides a replicated MongoDB
+      server with a database created.  The database is stored on persistent storage.  The
+      database name, username, and password are chosen via parameters when provisioning
+      this service.
+    template.openshift.io/provider-display-name: Red Hat, Inc. & AbarCloud
+  name: mongodb-replicated
+
+objects:
+  # A secret for storing the MongoDB authentication parameters
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      name: ${SERVICE_NAME}
+      annotations:
+        template.openshift.io/expose-username: "{.data['database-user']}"
+        template.openshift.io/expose-password: "{.data['database-password']}"
+        template.openshift.io/expose-database-admin-password: "{.data['database-admin-password']}"
+    stringData:
+      database-user: ${MONGODB_USER}
+      database-password: ${MONGODB_PASSWORD}
+      database-admin-password: ${MONGODB_ADMIN_PASSWORD}
+      mongodb-keyfile-value: ${MONGODB_KEYFILE_VALUE}
+      mongodb-ssl-pem-key-password: ${MONGODB_SSL_PEM_KEY_PASSWORD}
+
+  # A secret for storing the MongoDB SSL certificates
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      name: ${SERVICE_NAME}-ssl
+    stringData:
+      mongodb.pem: ${MONGODB_SSL_PEM_KEY_FILE}
+      cacert.pem: ${MONGODB_SSL_CA_FILE}
+
+  # A non-headless service which takes pod readiness into consideration
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: "${SERVICE_NAME}"
+      annotations:
+        service.alpha.openshift.io/dependencies: '[{"name":"${SERVICE_NAME}-internal","namespace":"","kind":"Service"}]'
+    spec:
+      # the list of ports that are exposed by this service
+      ports:
+        - name: mongodb
+          port: 27017
+      # will route traffic to pods having labels matching this selector
+      selector:
+        name: "${SERVICE_NAME}"
+
+  # A non-headless service for primary only MongoDB nodes
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: "${SERVICE_NAME}-primary-router"
+      annotations:
+        service.alpha.openshift.io/dependencies: '[{"name":"${SERVICE_NAME}-internal","namespace":"","kind":"Service"}]'
+    spec:
+      # the list of ports that are exposed by this service
+      ports:
+        - name: mongodb
+          port: 27017
+      # will route traffic to pods having labels matching this selector
+      selector:
+        name: "${SERVICE_NAME}-primary-router"
+
+  # A headless service to create DNS records
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: "${SERVICE_NAME}-internal"
+      annotations:
+        service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    spec:
+      clusterIP: None
+      # the list of ports that are exposed by this service
+      ports:
+        - name: mongodb
+          port: 27017
+      # will route traffic to pods having labels matching this selector
+      selector:
+        name: "${SERVICE_NAME}"
+
+  - kind: StatefulSet
+    apiVersion: apps/v1beta1
+    metadata:
+      name: "${SERVICE_NAME}"
+    spec:
+      # pets get DNS/hostnames that follow the pattern: ${metadata.name}-NUM.${spec.serviceName}.default.svc.cluster.local
+      serviceName: "${SERVICE_NAME}-internal"
+      replicas: 3
+      # describes the pod that will be created if insufficient replicas are detected
+      template:
+        metadata:
+          # this label will be used for count running pods
+          labels:
+            name: "${SERVICE_NAME}"
+        spec:
+          containers:
+            - name: mongo-container
+              image: "172.30.150.55:5000/openshift/mongodb:3.2"
+              imagePullPolicy: IfNotPresent
+              ports:
+                - containerPort: 27017
+              args:
+                - "run-mongod-pet"
+              volumeMounts:
+                - name: mongo-ssl
+                  mountPath: "/var/lib/mongodb/ssl"
+                - name: mongo-data
+                  mountPath: "/var/lib/mongodb/data"
+              env:
+                - name: MONGODB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      key: database-user
+                      name: ${SERVICE_NAME}
+                - name: MONGODB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: database-password
+                      name: ${SERVICE_NAME}
+                - name: MONGODB_DATABASE
+                  value: "${MONGODB_DATABASE}"
+                - name: MONGODB_ADMIN_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: database-admin-password
+                      name: ${SERVICE_NAME}
+                - name: MONGODB_REPLICA_NAME
+                  value: "${MONGODB_REPLICA_NAME}"
+                - name: MONGODB_KEYFILE_VALUE
+                  valueFrom:
+                    secretKeyRef:
+                      key: mongodb-keyfile-value
+                      name: ${SERVICE_NAME}
+                - name: MONGODB_SERVICE_NAME
+                  value: "${SERVICE_NAME}-internal"
+                - name: MONGODB_SSL_MODE
+                  value: ${MONGODB_SSL_MODE}
+                - name: MONGODB_SSL_PEM_KEY_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: mongodb-ssl-pem-key-password
+                      name: ${SERVICE_NAME}
+                - name: MONGODB_SSL_ADDITIONAL_OPTIONS
+                  value: ${MONGODB_SSL_ADDITIONAL_OPTIONS}
+              resources:
+                limits:
+                  memory: "${MEMORY_LIMIT}"
+              readinessProbe:
+                exec:
+                  command:
+                    - stat
+                    - /tmp/initialized
+              livenessProbe:
+                initialDelaySeconds: 30
+                tcpSocket:
+                  port: 27017
+                timeoutSeconds: 1
+          volumes:
+            - name: mongo-ssl
+              secret:
+                secretName: ${SERVICE_NAME}-ssl
+      volumeClaimTemplates:
+        - metadata:
+            name: mongo-data
+          spec:
+            # the volume can be mounted as read-write by a single node
+            accessModes: [ ReadWriteOnce ]
+            resources:
+              requests:
+                storage: "${VOLUME_CAPACITY}"
+
+  - kind: DeploymentConfig
+    apiVersion: v1
+    metadata:
+      name: ${SERVICE_NAME}-primary-router
+    spec:
+      replicas: 0
+      selector:
+        name: ${SERVICE_NAME}-primary-router
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          labels:
+            name: ${SERVICE_NAME}-primary-router
+        spec:
+          containers:
+          - env:
+            - name: MONGODB_SERVICE_NAME
+              value: ${SERVICE_NAME}-internal
+            image: ' '
+            imagePullPolicy: Never
+            livenessProbe:
+              initialDelaySeconds: 30
+              tcpSocket:
+                port: 27017
+              timeoutSeconds: 1
+            name: mongodb-primary-router
+            ports:
+            - containerPort: 27017
+              protocol: TCP
+            readinessProbe:
+              tcpSocket:
+                port: 27017
+              initialDelaySeconds: 3
+              timeoutSeconds: 1
+            resources:
+              limits:
+                memory: 100Mi
+            securityContext:
+              capabilities: {}
+              privileged: false
+            terminationMessagePath: /dev/termination-log
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+      triggers:
+      - type: ConfigChange
+      - type: ImageChange
+        imageChangeParams:
+          automatic: false
+          containerNames:
+            - "${SERVICE_NAME}-primary-router"
+          from:
+            kind: ImageStreamTag
+            name: 'mongodb-primary-router:3'
+            namespace: %NAMESPACE_HERE% # will be replaced via Makefile
+
+parameters:
+  - name: MEMORY_LIMIT
+    displayName: Memory Limit
+    description: Maximum amount of memory each MongoDB container can use, e.g. 500Mi, 1Gi. This
+      can be modified later in the StatefulSet.
+    required: true
+    value: 200Mi
+
+  - name: SERVICE_NAME
+    displayName: Service Name
+    description: The name used when creating the required deployment config, build config,
+      service etc. Must be unique and contain only lower-case letters.
+    required: true
+    value: mongodb
+
+  - name: MONGODB_USER
+    displayName: MongoDB Connection Username
+    description: Username for MongoDB user that will be used for accessing the database.
+      Leave this empty if you'd like it to be auto-generated.
+    from: 'user[A-Z0-9]{3}'
+    generate: expression
+    required: true
+
+  - name: MONGODB_PASSWORD
+    displayName: MongoDB Connection Password
+    description: Password for the MongoDB connection user. Leave this empty if you'd
+      like it to be auto-generated.
+    from: '[a-zA-Z0-9]{16}'
+    generate: expression
+    required: true
+
+  - name: MONGODB_DATABASE
+    displayName: MongoDB Database Name
+    description: Name of the MongoDB database to create. You can create more from the
+      MongoDB terminal later.
+    required: true
+    value: sampledb
+
+  - name: MONGODB_ADMIN_PASSWORD
+    displayName: MongoDB Admin Password
+    description: Password for the database 'admin' user. Leave this empty if you'd like
+      it to be auto-generated.
+    from: '[a-zA-Z0-9]{16}'
+    generate: expression
+    required: true
+
+  - name: MONGODB_REPLICA_NAME
+    displayName: Replica Set Name
+    description: The name of the replica set.
+    value: rs0
+    required: true
+
+  - name: MONGODB_KEYFILE_VALUE
+    displayName: Keyfile Content
+    description: |-
+      The value of the MongoDB keyfile (https://docs.mongodb.com/manual/core/security-internal-authentication/#internal-auth-keyfile).
+      Leave this empty if you'd like it to be auto-generated.
+    generate: expression
+    from: "[a-zA-Z0-9]{255}"
+    required: true
+
+  - name: VOLUME_CAPACITY
+    displayName: Volume Capacity
+    description: Volume space available for data, e.g. 2Gi, 5Gi.
+    required: true
+    value: 1Gi
+
+  - name: MONGODB_SSL_MODE
+    displayName: MongoDB SSL Mode
+    description: |-
+      The MongoDB SSL mode. This can be allowSSL or preferSSL. Please note that
+      requireSSL is not yet supported. Leave this blank if you do not want to
+      enable SSL on the server. This is only supported for MongoDB 3.2
+
+  - name: MONGODB_SSL_PEM_KEY_FILE
+    displayName: MongoDB SSL PEM Key File
+    description: |-
+      The MongoDB SSL certificate and key file contents with new lines
+      included. You can ensure this is inputted correctly by clicking on the
+      arrows to expand the below text area and ensuring you enter a new line at
+      the end of the content. Leave this blank if you do not want to enable SSL
+      on the server.
+
+  - name: MONGODB_SSL_CA_FILE
+    displayName: MongoDB SSL CA File
+    description: |-
+      The MongoDB SSL CA certificate file contents with new lines included.
+      This is not required for SSL, without it you will need to ensure that any
+      clients connecting over SSL use the --sslAllowInvalidCertificates option.
+      You can ensure this is inputted correctly by clicking on the arrows to
+      expand the below text area and ensuring you enter a new line at
+      the end of the content.
+
+  - name: MONGODB_SSL_PEM_KEY_PASSWORD
+    displayName: MongoDB SSL PEM Key Password
+    description: |-
+      Add your MongoDB SSL key password if your SSL key is protected
+      with a password. Leave this blank if your SSL key is not protected.
+
+  - name: MONGODB_SSL_ADDITIONAL_OPTIONS
+    displayName: MongoDB SSL Options
+    description: |-
+      Any additional SSL option flags for MongoDB separated by a space, e.g.
+      --sslAllowConnectionsWithoutCertificates and --sslDisabledProtocols

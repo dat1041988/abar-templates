@@ -1,0 +1,9 @@
+[template]
+src = "haproxy.cfg.tmpl"
+dest = "/usr/local/etc/haproxy/haproxy.cfg"
+owner = "root"
+mode = "0644"
+keys = [
+  "/mongodb/backends"
+]
+reload_cmd = "/reload-haproxy.sh"
