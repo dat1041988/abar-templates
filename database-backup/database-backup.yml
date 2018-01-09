@@ -1,0 +1,189 @@
+apiVersion: v1
+kind: Template
+message:
+metadata:
+  annotations:
+    openshift.io/display-name: Database backup
+    description: Backs up multiple databases to Object Storage
+    openshift.io/display-name: Database Backup
+    tags: backup,database
+    template.openshift.io/long-description: Creates a cron job that backs up multiple databases to AbarCloud Object Storage
+    template.openshift.io/provider-display-name: AbarCloud
+  name: database-backup
+
+objects:
+# A secret for storing the OSS authentication parameters
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${SERVICE_NAME}
+  stringData:
+    oss-id: ${OSS_ID}
+    oss-key: ${OSS_KEY}
+    config-file: ${CONFIG_FILE_CONTENTS}
+
+# A secret for storing the backup config file
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${SERVICE_NAME}-config
+  stringData:
+    config.json: ${CONFIG_FILE_CONTENTS}
+
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${SERVICE_NAME}
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: ${VOLUME_CAPACITY}
+
+- apiVersion: batch/v2alpha1
+  kind: CronJob
+  metadata:
+    name: ${SERVICE_NAME}
+  spec:
+    schedule: ${SCHEDULE}
+    concurrencyPolicy: Forbid
+    jobTemplate:
+      spec:
+        activeDeadlineSeconds: 120
+        template:
+          spec:
+            containers:
+            - name: database-backup
+              env:
+              - name: OSS_ID
+                valueFrom:
+                  secretKeyRef:
+                    key: oss-id
+                    name: ${SERVICE_NAME}
+              - name: OSS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    key: oss-key
+                    name: ${SERVICE_NAME}
+              - name: OSS_PATH
+                value: "${OSS_PATH}"
+              - name: BACKUP_CONFIG
+                value: "/etc/backup-config/config.json"
+              image: "172.30.150.55:5000/%NAMESPACE_HERE%/database-backup:1"
+              resources:
+                limits:
+                  memory: 200Mi
+              volumeMounts:
+              - mountPath: /backups
+                name: backups
+              - name: config-file
+                mountPath: /etc/backup-config
+                readOnly: true
+            volumes:
+            - name: backups
+              persistentVolumeClaim:
+                claimName: ${SERVICE_NAME}
+            - name: config-file
+              secret:
+                secretName: ${SERVICE_NAME}-config
+            restartPolicy: Never
+
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name: ${SERVICE_NAME}-restore
+  spec:
+    replicas: 0
+    selector:
+      name: ${SERVICE_NAME}-restore
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          name: ${SERVICE_NAME}-restore
+      spec:
+        containers:
+        - name: database-backup-restore
+          image: "172.30.150.55:5000/%NAMESPACE_HERE%/database-backup:1"
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: OSS_ID
+            valueFrom:
+              secretKeyRef:
+                key: oss-id
+                name: ${SERVICE_NAME}
+          - name: OSS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: oss-key
+                name: ${SERVICE_NAME}
+          - name: OSS_PATH
+            value: "${OSS_PATH}"
+          - name: BACKUP_CONFIG
+            value: "/etc/backup-config/config.json"
+          resources:
+            limits:
+              memory: 200Mi
+          args: ["./idle.sh"]
+          volumeMounts:
+          - mountPath: /backups
+            name: backups
+          - name: config-file
+            mountPath: /etc/backup-config
+            readOnly: true
+        volumes:
+        - name: backups
+          persistentVolumeClaim:
+            claimName: ${SERVICE_NAME}
+        - name: config-file
+          secret:
+            secretName: ${SERVICE_NAME}-config
+    triggers:
+    - type: ConfigChange
+
+parameters:
+- name: MEMORY_LIMIT
+  displayName: Memory Limit
+  description: Maximum amount of memory the cronjob can use.
+  required: true
+  value: 200Mi
+
+- name: SERVICE_NAME
+  displayName: Service Name
+  description: The name used when creating the required secrets, volumes and cronjobs. Must be unique and contain only lower-case letters.
+  required: true
+  value: database-backup
+
+- name: OSS_ID
+  displayName: OSS Access Key ID
+  description: Access Key ID for AbarCloud's object storage
+  required: true
+
+- name: OSS_KEY
+  displayName: OSS Secret Access Key
+  description: Secret Access Key for AbarCloud's object storage
+  required: true
+
+- name: OSS_PATH
+  displayName: OSS Path
+  description: Path to bucket and directory on AbarCloud's object storage (bucket_name/path)
+  required: true
+
+- name: CONFIG_FILE_CONTENTS
+  displayName: Backup Config File Contents
+  description: The contents of the config file for the backup script
+  required: true
+
+- name: SCHEDULE
+  displayName: Schedule
+  description: Schedule to run the backup cronjob in cron syntax
+  required: true
+  value: "24 * * * *"
+
+- name: VOLUME_CAPACITY
+  displayName: Volume Capacity
+  description: Volume space available for dumps before being uploaded, e.g. 2Gi, 5Gi.
+  required: true
+  value: 2Gi

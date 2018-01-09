@@ -1,0 +1,34 @@
+{
+  "backups": [
+    {
+      "type": "postgresql",
+      "prefix": "pg1-",
+      "host": "postgresql",
+      "port": "5432",
+      "user": "user",
+      "password": "pass",
+      "database": "db",
+      "backups_to_keep": 10
+    },
+    {
+      "type": "mongodb",
+      "prefix": "mongodb1-",
+      "host": "mongodb",
+      "port": "27017",
+      "user": "user",
+      "password": "pass",
+      "database": "db",
+      "backups_to_keep": 10
+    },
+    {
+      "type": "mysql",
+      "prefix": "mysql1-",
+      "host": "mysql",
+      "port": "3306",
+      "user": "root",
+      "password": "pass",
+      "database": "db",
+      "backups_to_keep": 10
+    }
+  ]
+}
