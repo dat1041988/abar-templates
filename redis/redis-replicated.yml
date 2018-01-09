@@ -67,20 +67,20 @@ objects:
         dnsPolicy: ClusterFirst
         containers:
         - name: ${SERVICE_NAME}
-          image: "172.30.150.55:5000/openshift/redis:4"
-          imagePullPolicy: Always
+          image: "172.30.150.55:5000/%NAMESPACE_HERE%/redis:4.0"
+          imagePullPolicy: IfNotPresent
           env:
           - name: SENTINEL_HOST
             value: ${SERVICE_NAME}-sentinel
           - name: SENTINEL_PORT
-            value: 26379
+            value: '26379'
           - name: REDIS_PASSWORD
             valueFrom:
               secretKeyRef:
                 key: database-password
                 name: ${SERVICE_NAME}
           - name: QUORUM
-            value: 2
+            value: '2'
           - name: REDIS_MAXMEMORY
             valueFrom:
               resourceFieldRef:
@@ -89,8 +89,8 @@ objects:
           - name: REDIS_MAXMEMORY_POLICY
             value: ${REDIS_MAXMEMORY_POLICY}
           ports:
-          - containerPort: 6379
-          - containerPort: 26379
+          - containerPort: '6379'
+          - containerPort: '26379'
           resources:
             limits:
               memory: ${MEMORY_LIMIT}

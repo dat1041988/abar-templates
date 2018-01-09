@@ -1,24 +1,21 @@
 apiVersion: v1
 kind: Template
-metadata:
-  name: redis
-
 objects:
 - apiVersion: v1
   kind: BuildConfig
   metadata:
-    name: redis-v4
+    name: redis-commander-latest
   spec:
     output:
       to:
         kind: ImageStreamTag
-        name: 'redis:4.0.9'
+        name: 'redis-commander:latest'
     runPolicy: Serial
     source:
       git:
         ref: master
         uri: 'git@github.com:abarcloud/abar-templates.git'
-      contextDir: 'redis/4'
+      contextDir: 'redis-commander/latest'
       type: Git
       sourceSecret:
         name: 'abarcloud-github-abar-templates'
@@ -30,18 +27,6 @@ objects:
 - apiVersion: v1
   kind: ImageStream
   metadata:
-    name: redis
-  spec:
-    tags:
-      - name: 'latest'
-        from:
-          kind: ImageStreamTag
-          name: '4.0.9'
-      - name: '4'
-        from:
-          kind: ImageStreamTag
-          name: '4.0.9'
-      - name: '4.0'
-        from:
-          kind: ImageStreamTag
-          name: '4.0.9'
+    annotations: ~
+    generation: 1
+    name: redis-commander

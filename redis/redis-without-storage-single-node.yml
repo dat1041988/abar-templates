@@ -46,14 +46,11 @@ objects:
       name: "${SERVICE_NAME}"
     type: ClusterIP
     sessionAffinity: None
-  status:
-    loadBalancer: {}
 
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
     name: "${SERVICE_NAME}"
-    creationTimestamp:
   spec:
     strategy:
       type: Recreate
@@ -70,7 +67,8 @@ objects:
       spec:
         containers:
         - name: redis
-          image: "172.30.150.55:5000/openshift/redis:4"
+          image: " "
+          imagePullPolicy: IfNotPresent
           ports:
           - containerPort: 6379
             protocol: TCP
@@ -108,18 +106,23 @@ objects:
           - name: "${SERVICE_NAME}-data"
             mountPath: "/var/lib/redis/data"
           terminationMessagePath: "/dev/termination-log"
-          imagePullPolicy: IfNotPresent
-          capabilities: {}
-          securityContext:
-            capabilities: {}
-            privileged: false
         volumes:
         - name: "${SERVICE_NAME}-data"
           emptyDir:
             medium: ''
         restartPolicy: Always
         dnsPolicy: ClusterFirst
-  status: {}
+    triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - "${SERVICE_NAME}"
+        from:
+          kind: ImageStreamTag
+          name: 'redis:4.0.9'
+          namespace: %NAMESPACE_HERE% # will be replaced via Makefile
 
 parameters:
 - name: MEMORY_LIMIT
