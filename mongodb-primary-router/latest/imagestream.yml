@@ -4,7 +4,7 @@ objects:
 - apiVersion: v1
   kind: BuildConfig
   metadata:
-    name: mongodb-primary-router
+    name: mongodb-primary-router-latest
   spec:
     output:
       to:

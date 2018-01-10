@@ -4,7 +4,7 @@ objects:
 - apiVersion: v1
   kind: BuildConfig
   metadata:
-    name: varnish-v4
+    name: varnish-latest
   spec:
     output:
       to:
@@ -25,16 +25,4 @@ objects:
 - apiVersion: v1
   kind: ImageStream
   metadata:
-    annotations: ~
-    generation: 1
     name: varnish
-  spec:
-    tags:
-    - name: '4'
-      annotations:
-        openshift.io/display-name: Varnish (Latest)
-        iconClass: icon-postgresql
-        tags: varnish
-      from:
-        kind: ImageStreamTag
-        name: '4.1.9'
