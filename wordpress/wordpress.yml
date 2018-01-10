@@ -95,7 +95,9 @@ objects:
           name: ${SERVICE_NAME}
       spec:
         containers:
-        - env:
+        - name: wordpress
+          image: "172.30.150.55:5000/%NAMESPACE_HERE%/wordpress:4.8-php7-apache"
+          env:
           - name: WORDPRESS_DB_HOST
             valueFrom:
               secretKeyRef:
@@ -126,7 +128,6 @@ objects:
             tcpSocket:
               port: 8080
             timeoutSeconds: 1
-          name: wordpress
           ports:
           - containerPort: 8080
             protocol: TCP
@@ -138,9 +139,6 @@ objects:
           resources:
             limits:
               memory: ${MEMORY_LIMIT}
-          securityContext:
-            capabilities: {}
-            privileged: false
           terminationMessagePath: /dev/termination-log
           volumeMounts:
           - name: wordpress-webroot
@@ -153,15 +151,6 @@ objects:
             claimName: ${SERVICE_NAME}-webroot
     triggers:
     - type: ConfigChange
-    - type: ImageChange
-      imageChangeParams:
-        automatic: false
-        containerNames:
-          - "${SERVICE_NAME}"
-        from:
-          kind: ImageStreamTag
-          name: 'wordpress:4.8-php7.1-apache'
-          namespace: %NAMESPACE_HERE% # will be replaced via Makefile
 
 parameters:
 

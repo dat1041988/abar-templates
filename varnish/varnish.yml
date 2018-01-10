@@ -61,7 +61,7 @@ objects:
           deploymentconfig: ${SERVICE_NAME}
       spec:
         containers:
-          - image: '172.30.150.55:5000/origin/varnish:4.1.9'
+          - image: '172.30.150.55:5000/%NAMESPACE_HERE%/varnish:4.1.9'
             imagePullPolicy: Always
             name: ${SERVICE_NAME}
             env:
@@ -101,7 +101,6 @@ objects:
             terminationMessagePath: /dev/termination-log
         dnsPolicy: ClusterFirst
         restartPolicy: Always
-        securityContext: {}
         terminationGracePeriodSeconds: 30
     test: false
     triggers:

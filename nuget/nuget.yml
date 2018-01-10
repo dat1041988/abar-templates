@@ -9,6 +9,7 @@ metadata:
     iconClass: icon-dotnet
     tags: database,nuget
 objects:
+
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
@@ -81,11 +82,10 @@ objects:
           kind: ImageStreamTag
           name: ${NUGET_NAME}:latest
           namespace: ${PROJECT_NAME}
+
 - apiVersion: v1
   kind: Service
   metadata:
-    annotations:
-    creationTimestamp: null
     labels:
       app: ${NUGET_NAME}
       url: ${NUGET_NAME}.${PROJECT_NAME}.svc.cluster.local
@@ -101,6 +101,7 @@ objects:
       deploymentconfig: ${NUGET_NAME}
     sessionAffinity: None
     type: ClusterIP
+
 - apiVersion: v1
   kind: Route
   metadata:
@@ -119,38 +120,36 @@ objects:
       name: ${NUGET_NAME}
       weight: 100
     wildcardPolicy: None
+
 - apiVersion: v1
   kind: ImageStream
   metadata:
     labels:
       app: ${NUGET_NAME}
     name: ${NUGET_NAME}
+
 - apiVersion: v1
   kind: BuildConfig
   metadata:
-    annotations:
-    creationTimestamp: null
     labels:
       app: ${NUGET_NAME}
     name: ${NUGET_NAME}
   spec:
-    nodeSelector: null
     output:
       to:
         kind: ImageStreamTag
         name: ${NUGET_NAME}:latest
-    postCommit: {}
-    resources: {}
     runPolicy: Serial
     source:
       git:
         uri: https://github.com/abarcloud/abar-templates.git
-      contextDir: 'nuget/source'
+      contextDir: 'nuget/latest'
       type: Git
     strategy:
       type: Docker
     triggers:
       - type: ConfigChange
+
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
@@ -161,7 +160,7 @@ objects:
     resources:
       requests:
         storage: 1Gi
-  status: {}
+
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
@@ -172,6 +171,7 @@ objects:
     resources:
       requests:
         storage: ${NUGET_PACKAGES_CAPACITY}
+
 parameters:
 - name: PROJECT_NAME
   displayName: Project Name

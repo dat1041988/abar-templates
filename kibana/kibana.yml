@@ -72,7 +72,7 @@ objects:
         spec:
           containers:
           - name: kibana
-            image: ' '
+            image: "172.30.150.55:5000/%NAMESPACE_HERE%/kibana:6.1.1"
             imagePullPolicy: IfNotPresent
             env:
             - name: ELASTICSEARCH_URL
@@ -101,15 +101,6 @@ objects:
           restartPolicy: Always
       triggers:
       - type: ConfigChange
-      - type: ImageChange
-        imageChangeParams:
-          automatic: false
-          containerNames:
-            - "${SERVICE_NAME}"
-          from:
-            kind: ImageStreamTag
-            name: 'kibana:6'
-            namespace: %NAMESPACE_HERE% # will be replaced via Makefile
 
 parameters:
   - name: SERVICE_NAME

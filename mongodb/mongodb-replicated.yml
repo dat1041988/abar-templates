@@ -208,17 +208,17 @@ objects:
             name: ${SERVICE_NAME}-primary-router
         spec:
           containers:
-          - env:
+          - name: mongodb-primary-router
+            env:
             - name: MONGODB_SERVICE_NAME
               value: ${SERVICE_NAME}-internal
-            image: ' '
+            image: "172.30.150.55:5000/%NAMESPACE_HERE%/mongodb-primary-router:3.2"
             imagePullPolicy: Never
             livenessProbe:
               initialDelaySeconds: 30
               tcpSocket:
                 port: 27017
               timeoutSeconds: 1
-            name: mongodb-primary-router
             ports:
             - containerPort: 27017
               protocol: TCP
@@ -238,15 +238,6 @@ objects:
           restartPolicy: Always
       triggers:
       - type: ConfigChange
-      - type: ImageChange
-        imageChangeParams:
-          automatic: false
-          containerNames:
-            - "${SERVICE_NAME}-primary-router"
-          from:
-            kind: ImageStreamTag
-            name: 'mongodb-primary-router:3'
-            namespace: %NAMESPACE_HERE% # will be replaced via Makefile
 
 parameters:
   - name: MEMORY_LIMIT

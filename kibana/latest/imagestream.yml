@@ -4,18 +4,18 @@ objects:
 - apiVersion: v1
   kind: BuildConfig
   metadata:
-    name: redis-commander-latest
+    name: kibana-latest
   spec:
     output:
       to:
         kind: ImageStreamTag
-        name: 'redis-commander:0.4.5'
+        name: 'kibana:6.1.1'
     runPolicy: Serial
     source:
       git:
         ref: master
         uri: 'https://github.com/abarcloud/abar-templates.git'
-      contextDir: 'redis-commander/latest'
+      contextDir: 'kibana/latest'
       type: Git
     strategy:
       type: Docker
@@ -25,4 +25,4 @@ objects:
 - apiVersion: v1
   kind: ImageStream
   metadata:
-    name: redis-commander
+    name: kibana

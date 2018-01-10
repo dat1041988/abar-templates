@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+# Force boot the first node since this will always be the first node to start
+# if the entire PetSet goes down.
+if [ "$HOSTNAME" == "$RABBITMQ_SERVICE_DOMAIN-0" ]; then
+  rabbitmqctl force_boot;
+fi;
+rabbitmq-server-original "$@"

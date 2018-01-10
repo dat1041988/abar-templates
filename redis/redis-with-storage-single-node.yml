@@ -78,7 +78,7 @@ objects:
       spec:
         containers:
         - name: redis
-          image: " "
+          image: "172.30.150.55:5000/%NAMESPACE_HERE%/redis:4.0.9"
           imagePullPolicy: IfNotPresent
           ports:
           - containerPort: 6379
@@ -125,15 +125,6 @@ objects:
         dnsPolicy: ClusterFirst
     triggers:
     - type: ConfigChange
-    - type: ImageChange
-      imageChangeParams:
-        automatic: true
-        containerNames:
-          - "${SERVICE_NAME}"
-        from:
-          kind: ImageStreamTag
-          name: 'redis:4.0.9'
-          namespace: %NAMESPACE_HERE% # will be replaced via Makefile
 
 parameters:
 - name: MEMORY_LIMIT

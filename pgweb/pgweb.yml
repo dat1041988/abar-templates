@@ -71,7 +71,6 @@ objects:
             terminationMessagePath: /dev/termination-log
         dnsPolicy: ClusterFirst
         restartPolicy: Always
-        securityContext: {}
         terminationGracePeriodSeconds: 30
     test: false
     triggers:

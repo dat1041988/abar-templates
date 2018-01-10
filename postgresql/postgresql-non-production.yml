@@ -128,17 +128,12 @@ objects:
             mountPath: "/var/lib/pgsql/data"
           terminationMessagePath: "/dev/termination-log"
           imagePullPolicy: IfNotPresent
-          capabilities: {}
-          securityContext:
-            capabilities: {}
-            privileged: false
         volumes:
         - name: "${SERVICE_NAME}-data"
           persistentVolumeClaim:
             claimName: "${SERVICE_NAME}"
         restartPolicy: Always
         dnsPolicy: ClusterFirst
-  status: {}
 
 parameters:
 - name: MEMORY_LIMIT

@@ -76,7 +76,7 @@ objects:
       spec:
         containers:
         - name: mysql
-          image: " "
+          image: "172.30.150.55:5000/%NAMESPACE_HERE%/mysql:5.6"
           imagePullPolicy: IfNotPresent
           ports:
           - containerPort: 3306
@@ -125,15 +125,6 @@ objects:
             claimName: "${SERVICE_NAME}"
     triggers:
     - type: ConfigChange
-    - type: ImageChange
-      imageChangeParams:
-        automatic: true
-        containerNames:
-          - "${SERVICE_NAME}"
-        from:
-          kind: ImageStreamTag
-          name: 'mysql:5.6'
-          namespace: %NAMESPACE_HERE% # will be replaced via Makefile
 
 parameters:
 - name: MEMORY_LIMIT

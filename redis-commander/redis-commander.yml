@@ -43,7 +43,7 @@ objects:
           deploymentconfig: ${SERVICE_NAME}
       spec:
         containers:
-          - image: ' '
+          - image: "172.30.150.55:5000/%NAMESPACE_HERE%/redis-commander:0.4.5"
             imagePullPolicy: IfNotPresent
             name: ${SERVICE_NAME}
             env:
@@ -72,20 +72,10 @@ objects:
             terminationMessagePath: /dev/termination-log
         dnsPolicy: ClusterFirst
         restartPolicy: Always
-        securityContext: {}
         terminationGracePeriodSeconds: 30
     test: false
     triggers:
     - type: ConfigChange
-    - type: ImageChange
-      imageChangeParams:
-        automatic: true
-        containerNames:
-          - "${SERVICE_NAME}"
-        from:
-          kind: ImageStreamTag
-          name: 'redis-commander:latest'
-          namespace: %NAMESPACE_HERE% # will be replaced via Makefile
 
 - apiVersion: v1
   kind: Service

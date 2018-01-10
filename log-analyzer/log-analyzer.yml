@@ -46,9 +46,9 @@ objects:
           deploymentconfig: log-analyzer
       spec:
         containers:
-          - image: " "
+          - name: log-analyzer
+            image: "172.30.150.55:5000/%NAMESPACE_HERE%/log-analyzer:1.0"
             imagePullPolicy: Always
-            name: log-analyzer
             env:
             - name: OSS_ACCESS_KEY_ID
               valueFrom:
@@ -81,20 +81,10 @@ objects:
             terminationMessagePath: /dev/termination-log
         dnsPolicy: ClusterFirst
         restartPolicy: Always
-        securityContext: {}
         terminationGracePeriodSeconds: 30
     test: false
     triggers:
     - type: ConfigChange
-    - type: ImageChange
-      imageChangeParams:
-        automatic: true
-        containerNames:
-          - log-analyzer
-        from:
-          kind: ImageStreamTag
-          name: 'log-analyzer:1'
-          namespace: %NAMESPACE_HERE% # will be replaced via Makefile
 
 parameters:
 

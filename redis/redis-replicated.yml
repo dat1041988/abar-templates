@@ -20,7 +20,7 @@ metadata:
   name: redis-replicated
   annotations:
     description: |-
-      Redis v4.0.6 in-memory data structure store, in a Sentinel-based Master/Slave Replication setup, with persistent storage.
+      Redis v4.0.9 in-memory data structure store, in a Sentinel-based Master/Slave Replication setup, with persistent storage.
 
       We recommend a minimum of 3 replicas to ensure high-availability.
     iconClass: icon-redis
@@ -67,7 +67,7 @@ objects:
         dnsPolicy: ClusterFirst
         containers:
         - name: ${SERVICE_NAME}
-          image: "172.30.150.55:5000/%NAMESPACE_HERE%/redis:4.0"
+          image: "172.30.150.55:5000/%NAMESPACE_HERE%/redis:4.0.9"
           imagePullPolicy: IfNotPresent
           env:
           - name: SENTINEL_HOST

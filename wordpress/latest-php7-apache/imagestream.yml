@@ -4,18 +4,18 @@ objects:
 - apiVersion: v1
   kind: BuildConfig
   metadata:
-    name: redis-commander-latest
+    name: wordpress-latest-php7-apache
   spec:
     output:
       to:
         kind: ImageStreamTag
-        name: 'redis-commander:0.4.5'
+        name: 'wordpress:4.8-php7-apache'
     runPolicy: Serial
     source:
       git:
         ref: master
         uri: 'https://github.com/abarcloud/abar-templates.git'
-      contextDir: 'redis-commander/latest'
+      contextDir: 'wordpress/latest-php7-apache'
       type: Git
     strategy:
       type: Docker
@@ -25,4 +25,4 @@ objects:
 - apiVersion: v1
   kind: ImageStream
   metadata:
-    name: redis-commander
+    name: wordpress

@@ -122,7 +122,7 @@ objects:
                 name: ${SERVICE_NAME}
           - name: MONGODB_SSL_ADDITIONAL_OPTIONS
             value: ${MONGODB_SSL_ADDITIONAL_OPTIONS}
-          image: " "
+          image: "172.30.150.55:5000/openshift/mongodb:3.2"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             initialDelaySeconds: 30
@@ -166,15 +166,6 @@ objects:
             claimName: ${SERVICE_NAME}
     triggers:
     - type: ConfigChange
-    - type: ImageChange
-      imageChangeParams:
-        automatic: false
-        containerNames:
-          - "${SERVICE_NAME}"
-        from:
-          kind: ImageStreamTag
-          name: 'mongodb:3.2'
-          namespace: openshift
 
 parameters:
 - name: MEMORY_LIMIT

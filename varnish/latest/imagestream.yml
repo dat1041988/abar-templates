@@ -4,18 +4,18 @@ objects:
 - apiVersion: v1
   kind: BuildConfig
   metadata:
-    name: redis-commander-latest
+    name: varnish-v4
   spec:
     output:
       to:
         kind: ImageStreamTag
-        name: 'redis-commander:0.4.5'
+        name: 'varnish:4.1.9'
     runPolicy: Serial
     source:
       git:
         ref: master
         uri: 'https://github.com/abarcloud/abar-templates.git'
-      contextDir: 'redis-commander/latest'
+      contextDir: 'varnish/latest'
       type: Git
     strategy:
       type: Docker
@@ -25,4 +25,16 @@ objects:
 - apiVersion: v1
   kind: ImageStream
   metadata:
-    name: redis-commander
+    annotations: ~
+    generation: 1
+    name: varnish
+  spec:
+    tags:
+    - name: '4'
+      annotations:
+        openshift.io/display-name: Varnish (Latest)
+        iconClass: icon-postgresql
+        tags: varnish
+      from:
+        kind: ImageStreamTag
+        name: '4.1.9'
