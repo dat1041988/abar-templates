@@ -4,7 +4,7 @@ metadata:
   name: postgresql-non-production
   annotations:
     openshift.io/display-name: PostgreSQL (non-production)
-    description: "PostgreSQL v9.5 database service, with persistent storage. For more
+    description: "PostgreSQL v9.4 database service, with persistent storage. For more
       information about using this template, see https://docs.openshift.org/latest/using_images/db_images/postgresql.html.\n\nNOTE:
       We do not yet recommend using this in production. For production we recommend
       using our managed PostgreSQL which offers a master/slave High-Availability setup
@@ -26,7 +26,7 @@ message: |-
     Database Name: ${POSTGRESQL_DATABASE}
    Connection URL: postgresql://${SERVICE_NAME}:5432/
 
-  For more information about using this template, see https://github.com/sclorg/postgresql-container/blob/master/9.5.
+  For more information about using this template, see https://github.com/sclorg/postgresql-container/blob/master/9.4.
 objects:
 
 - apiVersion: v1
@@ -88,7 +88,7 @@ objects:
       spec:
         containers:
         - name: postgresql
-          image: "172.30.150.55:5000/openshift/postgresql:9.5"
+          image: "172.30.150.55:5000/openshift/postgresql:9.4"
           ports:
           - containerPort: 5432
             protocol: TCP

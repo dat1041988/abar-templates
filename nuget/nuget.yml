@@ -88,7 +88,6 @@ objects:
   metadata:
     labels:
       app: ${NUGET_NAME}
-      url: ${NUGET_NAME}.${PROJECT_NAME}.svc.cluster.local
     name: ${NUGET_NAME}
   spec:
     ports:

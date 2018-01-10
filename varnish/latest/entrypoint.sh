@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
+
 set -e
 
 VARNISH_CONF=/etc/varnish/default.vcl

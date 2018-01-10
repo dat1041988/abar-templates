@@ -1,4 +1,4 @@
-FROM openshift/rabbitmq-clustered:3.6
+FROM openshift/rabbitmq:3.6
 
 RUN rabbitmq-plugins enable --offline rabbitmq_management
 
