@@ -90,9 +90,9 @@ parameters:
 
 - name: MEMORY_LIMIT
   displayName: Memory Limit
-  description: To analyze logs smaller than ~300K requests 1Gi is enough. Use 2Gi if you want to analyze ~800K requests.
+  description: To analyze logs smaller than ~300K requests 1000Mi is enough. Use 2000Mi if you want to analyze ~800K requests.
   required: true
-  value: 1Gi
+  value: 1000Mi
 
 - displayName: OSS Credentials Secret
   description: The name of the secret containing OSS credentials for accessing your logs. This is provided to you by AbarCloud.

@@ -1,9 +1,9 @@
 # Abar Templates
 
-AbarCloud Openshift templates and image-streams.
+AbarCloud OpenShift templates and image-streams.
 
 ## Development
-To create all Templates, BuildConfigs and (customized) ImageStreams under your own namespace copy `.makerc.dist` as `.makerc` and put your namespace in it. 
+To create all Templates, BuildConfigs and (customized) ImageStreams under your own namespace copy `.makerc.dist` as `.makerc` and put your namespace in it.
 
 ## Release
 To create/update a single `ImageStream` and related `BuildConfig` run:
