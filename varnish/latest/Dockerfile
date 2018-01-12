@@ -1,7 +1,8 @@
 FROM alpine:3.6
 
-RUN apk update && \
-    apk add --no-cache varnish=4.1.9-r0 && \
+RUN apk add --update --no-cache \
+        varnish=4.1.9-r0 \
+    && \
     rm -rf /var/cache/apk/*
 
 COPY default.vcl /etc/varnish/default.vcl
