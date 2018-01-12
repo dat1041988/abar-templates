@@ -13,8 +13,8 @@ COPY config/master.conf \
 COPY start.sh /start.sh
 
 RUN chmod +x /start.sh && \
-    chgrp -R 0 /var/run /var/log /redis/config /etc/supervisord.conf && \
-    chmod -R g=u /var/run /var/log /redis/config /etc/supervisord.conf
+    chgrp -R 0 /var/run /var/log /redis/config /etc/supervisord.conf /etc && \
+    chmod -R g=u /var/run /var/log /redis/config /etc/supervisord.conf /etc
 
 CMD ["/start.sh"]
 

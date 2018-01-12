@@ -87,6 +87,8 @@ objects:
             tcpSocket:
               port: 6379
           env:
+          - name: SINGLE_NODE
+            value: 'true'
           - name: REDIS_PASSWORD
             valueFrom:
               secretKeyRef:

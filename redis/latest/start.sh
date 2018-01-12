@@ -92,7 +92,7 @@ fi
 
 if [[ "${SINGLE_NODE}" == "true" ]]; then
     # Do not auto-start sentinel service for single-node setup
-    sed '$!N;s/\(command=redis-sentinel.*\n\)\(.*\)/\1\;\2/;P;D' /etc/supervisord.conf
+    sed -i '$!N;s/\(command=redis-sentinel.*\n\)\(autostart.*\)/\1\autostart=false\nautorestart=false/;P;D' /etc/supervisord.conf
 
     configure_master
 else
