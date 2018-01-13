@@ -6,7 +6,7 @@ metadata:
   annotations:
     openshift.io/display-name: Redis without storage - single node
     description: |-
-      Redis v4.0.6 in-memory data structure store, without persistent storage.
+      Redis v4.0.9 in-memory data structure store, without persistent storage.
 
       WARNING: Any data stored will be lost upon pod destruction. Only use this template for testing. Scaling to more than one replica is not supported.
     iconClass: icon-redis

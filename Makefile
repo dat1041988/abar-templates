@@ -5,7 +5,7 @@ else
     include .makerc.dist
 endif
 
-.PHONY: all imagestreams templates builds **/*.yml **/*/imagestream.yml
+.PHONY: all imagestreams templates builds */ **/*.yml **/*/imagestream.yml
 
 **/*/imagestream.yml:
 	@echo "Processing and uploading imagestream in namespace $(NAMESPACE): ${@}" && \
@@ -20,5 +20,9 @@ endif
 imagestreams: **/*/imagestream.yml
 
 templates: **/*.yml
+
+*/:
+	$(MAKE) $@*.yml || true
+	$(MAKE) $@*/imagestream.yml
 
 all: imagestreams templates

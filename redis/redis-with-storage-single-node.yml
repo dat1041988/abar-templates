@@ -6,7 +6,7 @@ metadata:
   annotations:
     openshift.io/display-name: Redis with storage - single node
     description: |-
-      Redis v4.0.6 in-memory data structure store, with persistent storage.
+      Redis v4.0.9 in-memory data structure store, with persistent storage.
 
       Scaling to more than one replica is not supported.
     iconClass: icon-redis
@@ -117,7 +117,7 @@ objects:
               memory: "${MEMORY_LIMIT}"
           volumeMounts:
           - name: "${SERVICE_NAME}-data"
-            mountPath: "/var/lib/redis/data"
+            mountPath: /data
           terminationMessagePath: "/dev/termination-log"
         volumes:
         - name: "${SERVICE_NAME}-data"

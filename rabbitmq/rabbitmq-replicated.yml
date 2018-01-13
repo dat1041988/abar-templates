@@ -124,7 +124,7 @@ objects:
               secretKeyRef:
                 name: ${SERVICE_NAME}
                 key: rabbitmq-password
-          image: "172.30.150.55:5000/%NAMESPACE_HERE%/rabbitmq-clustered:3.6-management"
+          image: "172.30.150.55:5000/%NAMESPACE_HERE%/rabbitmq:3.6-management"
           imagePullPolicy: Always
           lifecycle:
             postStart:

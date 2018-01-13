@@ -70,7 +70,7 @@ objects:
             - name: TARGET_SERVICE_PORT
               value: ${TARGET_SERVICE_PORT}
             - name: REMOTE_PURGER
-              value: ${REMOTE_PURGER}
+              value: "10.128.0.0/14" # Pods IP Range
             - name: VARNISH_MEMORY
               valueFrom:
                 resourceFieldRef:
@@ -128,6 +128,3 @@ parameters:
   name: MEMORY_LIMIT
   required: true
   value: 200Mi
-- displayName: Remote Purger
-  description: IP address of a remote purger to allow them to issue PURGE requests. Set it to your applications pod IP.
-  name: REMOTE_PURGER

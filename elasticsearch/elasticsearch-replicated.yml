@@ -5,7 +5,7 @@ message: |-
 
          Username: elastic
          Password: ${INITIAL_ELASTIC_PASSWORD}
-           Server: http://${SERVICE_NAME}
+       Server URL: http://${SERVICE_NAME}:9200
    Connection URL: elastic:${INITIAL_ELASTIC_PASSWORD}@${SERVICE_NAME}
 
   NOTE: Please *email us* your project name so we can enable a special setting that's required, see https://docs.abarcloud.com/support.html.

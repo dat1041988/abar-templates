@@ -40,11 +40,15 @@ sub vcl_recv {
   }
 
   # Purging
-  if (req.method == "PURGE") {
+  if (req.method == "PURGE" || req.method == "BAN") {
     if (!client.ip ~ purge) {
       return(synth(405,"Not allowed."));
     }
-    return (purge);
+
+    ban("req.http.host == " + req.http.host + " && req.url == " + req.url);
+    ban("req.http.host == " + req.http.host + " && req.url ~ " + req.url);
+
+    return (synth(200,"Purged " + req.url + " " + req.http.host));
   }
 
   # Support WebSockets

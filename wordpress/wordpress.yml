@@ -44,7 +44,7 @@ objects:
       insecureEdgeTerminationPolicy: Redirect
     to:
       kind: Service
-      name: wordpress
+      name: ${SERVICE_NAME}
       weight: 100
     wildcardPolicy: None
 

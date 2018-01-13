@@ -126,7 +126,6 @@ parameters:
     displayName: Elasticsearch URL
     description: Based on internal hostname and port. For example http://elasticsearch.myproject.svc:9200
     required: true
-    value: http://elasticsearch:9200
 
   - name: ELASTICSEARCH_USER
     displayName: Elasticsearch User

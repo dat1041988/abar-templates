@@ -24,7 +24,7 @@ RUN curl -L https://github.com/gforcada/haproxy_log_analysis/archive/master.zip 
     rm -rf /tmp/*
 
 # Install OSS Util
-RUN curl -L http://docs-aliyun.cn-hangzhou.oss.aliyun-inc.com/assets/attach/50452/cn_zh/1506525299111/ossutil64 -o /usr/local/bin/ossutil && \
+RUN curl -L http://public.abarcloud.com/tools/ossutil64 -o /usr/local/bin/ossutil && \
     chmod +x /usr/local/bin/ossutil
 
 # Permissions
