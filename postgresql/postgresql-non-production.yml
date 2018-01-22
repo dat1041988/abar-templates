@@ -151,7 +151,7 @@ parameters:
 - name: POSTGRESQL_USER
   displayName: PostgreSQL Connection Username
   description: 'Username for PostgreSQL user that will be used for accessing the database.
-    Leave this empty if you''d like it to be auto-generated. Note: This cannot be
+    Leave this empty if you''d like it to be auto-generated. This cannot be
     ''postgres'' since this user is already created by the image.'
   generate: expression
   from: user[A-Z0-9]{3}
