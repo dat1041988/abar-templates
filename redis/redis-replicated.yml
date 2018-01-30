@@ -20,7 +20,7 @@ metadata:
   name: redis-replicated
   annotations:
     description: |-
-      Redis v4.0.9 in-memory data structure store, in a Sentinel-based Master/Slave Replication setup, with persistent storage.
+      Redis v4.0.6 in-memory data structure store, in a Sentinel-based Master/Slave Replication setup, with persistent storage.
 
       We recommend a minimum of 3 replicas to ensure high-availability.
     iconClass: icon-redis
@@ -46,9 +46,27 @@ objects:
     ports:
       - port: 26379
         targetPort: 26379
+        name: sentinel
     selector:
       app: ${SERVICE_NAME}
       sentinel: "true"
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${SERVICE_NAME}
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    labels:
+      app: ${SERVICE_NAME}
+  spec:
+    clusterIP: None
+    ports:
+    - port: 6379
+      name: server
+    selector:
+      app: ${SERVICE_NAME}
+      server: "true"
 
 - apiVersion: apps/v1beta1
   kind: StatefulSet
@@ -62,14 +80,21 @@ objects:
         labels:
           app: ${SERVICE_NAME}
           sentinel: "true"
+          server: "true"
       spec:
         terminationGracePeriodSeconds: 10
         dnsPolicy: ClusterFirst
         containers:
         - name: ${SERVICE_NAME}
-          image: "172.30.150.55:5000/%NAMESPACE_HERE%/redis:4.0.9"
+          image: "172.30.150.55:5000/%NAMESPACE_HERE%/redis:4.0.6"
           imagePullPolicy: IfNotPresent
           env:
+          - name: SERVICE_NAME
+            value: ${SERVICE_NAME}
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
           - name: SENTINEL_HOST
             value: ${SERVICE_NAME}-sentinel
           - name: SENTINEL_PORT
@@ -89,8 +114,10 @@ objects:
           - name: REDIS_MAXMEMORY_POLICY
             value: ${REDIS_MAXMEMORY_POLICY}
           ports:
-          - containerPort: '6379'
-          - containerPort: '26379'
+          - containerPort: 6379
+            protocol: TCP
+          - containerPort: 26379
+            protocol: TCP
           resources:
             limits:
               memory: ${MEMORY_LIMIT}

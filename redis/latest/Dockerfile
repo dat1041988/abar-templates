@@ -1,7 +1,7 @@
 FROM redis:4.0.6-alpine
 
 RUN apk update && \
-    apk add --no-cache bash supervisor && \
+    apk add --no-cache bash supervisor netcat-openbsd bind-tools && \
     rm -rf /var/cache/apk/*
 
 COPY config/supervisord.conf /etc/supervisord.conf

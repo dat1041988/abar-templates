@@ -141,9 +141,10 @@ parameters:
   required: true
 - name: MYSQL_USER
   displayName: MySQL Connection Username
-  description: 'Username for MySQL user that will be used for accessing the database.
+  description: -|
+    Username for MySQL user that will be used for accessing the database.
     Leave this empty if you'd like it to be auto-generated. This cannot be
-    ''root'' since this user is already created by the image.'
+    "root" since this user is already created by the image.
   generate: expression
   from: user[A-Z0-9]{3}
   required: true
