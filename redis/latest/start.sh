@@ -105,7 +105,11 @@ configure_sentinel() {
 
 # Use a little lower value for maxmemory so that there is some free RAM on the system for slave
 # output buffers AND sentinel process.
-REDIS_MAXMEMORY=$(echo | awk '{ print '${REDIS_MAXMEMORY}'*0.8}')
+# Formula: (Pod Memory - 100mb) - 20% --> Buffer required by redis server itself.
+#                           \__ 80mb for Supervisor and 20mb for Sentinel
+# Min. Pod Memory: 200mb
+#
+REDIS_MAXMEMORY=$(echo | awk '{ print ('${REDIS_MAXMEMORY}' - 104857600)*0.8}')
 
 if [[ "${SINGLE_NODE}" == "true" ]]; then
     # Do not auto-start sentinel service for single-node setup

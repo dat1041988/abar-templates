@@ -174,10 +174,10 @@ parameters:
   value: 1Gi
 - displayName: Memory Limit
   description: Maximum amount of memory the container can use, e.g. 200Mi, 500Mi, 1Gi. This
-    can be modified later in the DeploymentConfig.
+    can be modified later in the DeploymentConfig. Replication needs at least 200Mi
   name: MEMORY_LIMIT
   required: true
-  value: 100Mi
+  value: 200Mi
 - displayName: Max-memory Policy
   description: |-
       Tells Redis slaves how to behave when exceeding the available maxmemory.
