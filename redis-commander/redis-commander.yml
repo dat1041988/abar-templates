@@ -6,7 +6,7 @@ metadata:
     openshift.io/display-name: Redis Commander
     description: A management UI for Redis based on http://joeferner.github.io/redis-commander/
     iconClass: icon-redis
-    tags: administration,redis
+    tags: database,administration,redis
 message: |-
   Once the application is running, you can view it at https://${ROUTE_PREFIX}.abar.cloud
 
