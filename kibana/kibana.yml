@@ -13,7 +13,7 @@ metadata:
       Kibana v6.1.1 service to connect to an Elasticsearch cluster.
     iconClass: icon-elastic
     openshift.io/display-name: Kibana
-    tags: analytics,kibana
+    tags: database,analytics,kibana
     template.openshift.io/documentation-url: https://docs.abarcloud.com/additional-services/elasticsearch.html#kibana
     template.openshift.io/provider-display-name: AbarCloud
   name: kibana
