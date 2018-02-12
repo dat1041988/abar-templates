@@ -31,7 +31,7 @@ objects:
     metadata:
       name: "${SERVICE_NAME}-config"
     data:
-      elasticsearch.yml: |+
+      elasticsearch.yml: |-
         cluster.name: ${SERVICE_NAME}
         node.name: ${HOSTNAME}
         network.host: 0.0.0.0
@@ -49,6 +49,24 @@ objects:
         discovery.zen.minimum_master_nodes: ${MINIMUM_MASTER_NODES}
         xpack.monitoring.history.duration: 1d
 
+        #
+        # Recovery configurations
+        #
+
+        # Enable automatic shard allocation
+        cluster.routing.allocation.enable: all
+
+        # Recover as long as this many data or master nodes
+        # have joined the cluster
+        gateway.recover_after_nodes: ${MINIMUM_MASTER_NODES}
+
+        # Recovery of local shards will start as soon as the expected
+        # number of nodes have joined the cluster
+        gateway.expected_nodes: ${ELASTIC_NODE_COUNT}
+
+        # Once the recover_after_time duration has timed out,
+        # recovery will start.
+        gateway.recover_after_time: 5m
   # A non-headless service which takes pod readiness into consideration
   - kind: Service
     apiVersion: v1
