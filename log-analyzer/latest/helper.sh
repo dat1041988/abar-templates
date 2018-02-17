@@ -100,6 +100,12 @@ if [[ $1 == "summary" ]]; then
   NUMBER_OF_REQUESTS=$(helper.sh analyze ${2} ${@:3} -c counter |tee /dev/tty | tail -n1)
 
   echo "---------------------------------------------------"
+  echo "[SUMMARY] Getting no. of 503 requests..."
+  echo "---------------------------------------------------"
+  NUMBER_OF_503s=$(helper.sh analyze ${2} ${@:3} -c counter -f "status_code[503]" |tee /dev/tty | tail -n1)
+  PERCENT_OF_503s=$(awk 'BEGIN { pc=100*'${NUMBER_OF_503s}'/'${NUMBER_OF_REQUESTS}'; printf "%.4f\n", pc; }')
+
+  echo "---------------------------------------------------"
   echo "[SUMMARY] Getting no. of 504 requests..."
   echo "---------------------------------------------------"
   NUMBER_OF_504s=$(helper.sh analyze ${2} ${@:3} -c counter -f "status_code[504]" |tee /dev/tty | tail -n1)
@@ -132,6 +138,7 @@ cat << EOF
   ---------------------------------------
 
   - Number of requests: ${NUMBER_OF_REQUESTS}
+  - Number of 503 errors: ${NUMBER_OF_503s} [${PERCENT_OF_503s}%]
   - Number of 504 errors: ${NUMBER_OF_504s} [${PERCENT_OF_504s}%]
 
   - Average response time: ${AVERAGE_RESPONSE_TIME} milliseconds
