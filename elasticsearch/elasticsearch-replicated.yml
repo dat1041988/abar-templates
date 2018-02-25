@@ -161,6 +161,8 @@ objects:
       volumeClaimTemplates:
         - metadata:
             name: elasticsearch-data
+            annotations:
+              volume.beta.kubernetes.io/storage-class: persistent-storage-consistent-metadata
           spec:
             # the volume can be mounted as read-write by a single node
             accessModes: [ ReadWriteOnce ]
