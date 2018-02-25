@@ -135,8 +135,8 @@ objects:
       - type: GitLab
         gitlab:
           secret: ${GITLAB_WEBHOOK_SECRET}
-      - type: BitBucket
-        github:
+      - type: Bitbucket
+        bitbucket:
           secret: ${BITBUCKET_WEBHOOK_SECRET}
       - type: Generic
         generic:
