@@ -106,7 +106,7 @@ objects:
               memory: "${MEMORY_LIMIT}"
           volumeMounts:
           - name: "${SERVICE_NAME}-data"
-            mountPath: "/var/lib/redis/data"
+            mountPath: /data
           terminationMessagePath: "/dev/termination-log"
         volumes:
         - name: "${SERVICE_NAME}-data"
