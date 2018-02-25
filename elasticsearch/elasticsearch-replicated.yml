@@ -36,11 +36,6 @@ objects:
         node.name: ${HOSTNAME}
         network.host: 0.0.0.0
 
-        # Enable for memory locking and disable swap for containers
-        # for better performance and stable ES clusters
-        #bootstrap.memory_lock: true
-        #bootstrap.mlockall: true
-
         discovery.zen.ping.unicast.hosts: ["${SERVICE_NAME}-discovery"]
 
         # minimum_master_nodes need to be explicitly set when bound on a public IP
