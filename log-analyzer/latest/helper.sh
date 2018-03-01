@@ -80,8 +80,25 @@ if [[ $1 == "analyze" ]]; then
 
   set -e
 
+  if [ "@" == ${3:0:1} ]; then
+    text_filter=${3:1}
+
+    filtered_logs_path=${COMBINED_LOGS_PATH}.filter.$(echo -n ${text_filter} | md5sum | cut -d ' ' -f 1)
+    if [[ ! -e ${filtered_logs_path} ]]; then
+        echo "Filtering lines on based on text ${text_filter}..."
+        sed "/${text_filter}/!d" ${COMBINED_LOGS_PATH} > ${filtered_logs_path}
+    else
+        echo "Cache exists for filter on text ${text_filter}."
+    fi
+
+    COMBINED_LOGS_PATH=${filtered_logs_path}
+    extra_arguments=${@:4}
+  else
+    extra_arguments=${@:3}
+  fi
+
   echo "Running HAProxy log analysis..."
-  haproxy_log_analysis -l ${COMBINED_LOGS_PATH} ${@:3}
+  haproxy_log_analysis -l ${COMBINED_LOGS_PATH} ${extra_arguments}
 
   exit 0
 fi
