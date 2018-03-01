@@ -189,12 +189,12 @@ objects:
             storage: ${VOLUME_CAPACITY}
 
 parameters:
-- description: Maximum amount of memory each RabbitMQ container can use, e.g. 1Gi, 2Gi. This
-    can be modified later in the StatefulSet. We recommend a minimum of 1Gi.
+- description: Maximum amount of memory each RabbitMQ container can use, e.g. 1000Mi, 2000Mi. This
+    can be modified later in the StatefulSet. We recommend a minimum of 1000Mi.
   displayName: Memory Limit
   name: MEMORY_LIMIT
   required: true
-  value: 500Mi
+  value: 1000Mi
 - description: "Maximum percentage of memory RabbitMQ can use. Read more: https://www.rabbitmq.com/production-checklist.html#resource-limits-ram"
   displayName: Memory High Watermark
   name: RABBITMQ_VM_MEMORY_HIGH_WATERMARK
