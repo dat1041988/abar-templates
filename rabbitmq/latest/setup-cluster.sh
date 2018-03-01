@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 # Wait until Rabbit MQ is ready
-# Try this 5 times and sleep 10 seconds
+# Try this 60 times and sleep 10 seconds
 n=0
-max=5
+max=60
 until [ $n -ge $max ]; do
   rabbitmqctl node_health_check && break
   n=$[$n+1]
@@ -13,7 +13,6 @@ until [ $n -ge $max ]; do
   fi
   sleep 10
 done
-
 
 # Add it to the cluster of the first pod in the set
 if [[ "$HOSTNAME" != "$RABBITMQ_SERVICE_DOMAIN-0" && -z "$(rabbitmqctl cluster_status | grep $RABBITMQ_SERVICE_DOMAIN-0)" ]]; then
