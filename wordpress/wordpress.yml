@@ -156,7 +156,7 @@ parameters:
 
 - name: MEMORY_LIMIT
   displayName: Memory Limit
-  description: Maximum amount of memory the container can use, e.g. 300Mi, 1Gi, 2Gi. This
+  description: Maximum amount of memory the container can use, e.g. 500Mi, 1000Mi. This
     can be modified later in the DeploymentConfig. We recommend a minimum of 200Mi.
   required: true
   value: 200Mi
