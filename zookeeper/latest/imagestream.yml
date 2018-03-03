@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: zookeeper
+objects:
+
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: zookeeper
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: zookeeper-latest
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: 'zookeeper:3.4.11'
+    runPolicy: Serial
+    source:
+      git:
+        ref: master
+        uri: 'https://github.com/abarcloud/abar-templates.git'
+      contextDir: 'zookeeper/latest'
+      type: Git
+    strategy:
+      type: Docker
+    triggers:
+      - type: ConfigChange
