@@ -1,0 +1,184 @@
+apiVersion: v1
+kind: Template
+message: |-
+  The following service have been created in your project: ${SERVICE_NAME}
+
+    Kafka Host: ${SERVICE_NAME}
+    Kafka Port: 9092
+
+  To scale this Kafka cluster use command below:
+  $ oc scale statefulset ${SERVICE_NAME} --replicas=X
+
+metadata:
+  name: kafka
+  annotations:
+    description: |-
+      Kafka 1.0.0 provides a unified, high-throughput, low-latency platform for handling real-time data feeds. Read more at https://docs.abarcloud.com/additional-services/redis.html
+    iconClass: icon-apache
+    openshift.io/display-name: Apache Kafka - replicated
+    tags: kafka,messaging
+    template.openshift.io/provider-display-name: AbarCloud
+
+objects:
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      application: ${SERVICE_NAME}
+    name: ${SERVICE_NAME}-headless
+  spec:
+    clusterIP: None
+    portalIP: None
+    ports:
+    - port: 9092
+      protocol: TCP
+      targetPort: 9092
+    selector:
+      application: ${SERVICE_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      application: ${SERVICE_NAME}
+    name: ${SERVICE_NAME}
+  spec:
+    ports:
+    - port: 9092
+      protocol: TCP
+      targetPort: 9092
+    selector:
+      application: ${SERVICE_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+
+- apiVersion: apps/v1beta1
+  kind: StatefulSet
+  metadata:
+    labels:
+      application: ${SERVICE_NAME}
+    name: ${SERVICE_NAME}
+  spec:
+    replicas: ${NUMBER_OF_BROKERS}
+    selector:
+      matchLabels:
+        application: ${SERVICE_NAME}
+    serviceName: ${SERVICE_NAME}-headless
+    template:
+      metadata:
+        labels:
+          application: ${SERVICE_NAME}
+      spec:
+        containers:
+        - command:
+          - sh
+          - -c
+          - bin/kafka-server-start.sh config/server.properties
+            --override zookeeper.connect=$ZOOKEEPER_HOST
+            --override advertised.host.name=$KAFKA_ADVERTISED_HOST_NAME
+            --override broker.id=$(hostname | awk -F'-' '{print $2}')
+            --override log.dirs=/opt/kafka/data
+            --override num.partitions=$KAFKA_DEFAULT_PARTITIONS
+            --override default.replication.factor=$KAFKA_DEFAULT_REPLICATION_FACTOR
+            --override offsets.topic.replication.factor=$KAFKA_DEFAULT_REPLICATION_FACTOR
+            --override min.insync.replicas=$KAFKA_MIN_INSYNC_REPLICAS
+          env:
+          - name: KAFKA_ADVERTISED_HOST_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: status.podIP
+          - name: KAFKA_HEAP_OPTS
+            value: ${KAFKA_HEAP_OPTS}
+          - name: KAFKA_DEFAULT_PARTITIONS
+            value: ${KAFKA_DEFAULT_PARTITIONS}
+          - name: KAFKA_DEFAULT_REPLICATION_FACTOR
+            value: ${KAFKA_DEFAULT_REPLICATION_FACTOR}
+          - name: KAFKA_MIN_INSYNC_REPLICAS
+            value: ${KAFKA_MIN_INSYNC_REPLICAS}
+          - name: ZOOKEEPER_HOST
+            value: ${ZOOKEEPER_HOST}
+          image: "172.30.150.55:5000/%NAMESPACE_HERE%/kafka:1.0.0"
+          imagePullPolicy: Always
+          name: kafka
+          ports:
+          - containerPort: 9092
+            protocol: TCP
+          resources:
+            limits:
+              memory: ${MEMORY_LIMIT}
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /opt/kafka/data
+            name: datadir
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+    volumeClaimTemplates:
+    - metadata:
+        labels:
+          application: ${SERVICE_NAME}
+        name: datadir
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: ${VOLUME_CAPACITY}
+#
+# Parameters
+#
+parameters:
+- displayName: Service Name
+  description: The name used when creating the required StatefulSet, Secret, Service etc. Must be unique and contain only lower-case letters.
+  name: SERVICE_NAME
+  required: true
+  value: kafka
+- displayName: Number of brokers
+  description: Number of Kafka brokers in cluster i.e. cluster size. Must be greater than or equal to replication factor. Must be an odd number 1, 3, 5 etc.
+  name: NUMBER_OF_BROKERS
+  required: true
+  value: "3"
+- displayName: Default number of partitions
+  description: The default number of log partitions per topic. Use higher number for more consumer parallelism.
+  name: KAFKA_DEFAULT_PARTITIONS
+  required: true
+  value: "1"
+- displayName: Default replication factor
+  description: Default number of replicas for each partition. Should be larger than or equal to "Minimum in-sync replicas"
+  name: KAFKA_DEFAULT_REPLICATION_FACTOR
+  required: true
+  value: "3"
+- displayName: Minimum in-sync replicas
+  description: |-
+    Specifies the minimum number of replicas that must acknowledge a write for the write to be considered successful.
+    Read more at https://kafka.apache.org/documentation/
+    Should be less than or equal to "Default replication factor"
+  name: KAFKA_MIN_INSYNC_REPLICAS
+  required: true
+  value: "2"
+- displayName: Zookeeper Host
+  description: The internal hostname and port of Zookeeper service. For example zookeeper.svc:2181
+  name: ZOOKEEPER_HOST
+  required: true
+  value: zookeeper.svc:2181
+- displayName: Volume Capacity
+  description: Volume space available for data, e.g. 1Gi, 5Gi.
+  name: VOLUME_CAPACITY
+  required: true
+  value: 1Gi
+- displayName: Memory Limit
+  description: Maximum amount of memory the container can use, e.g. 500Mi, 1000Mi. This
+    can be modified later in the StatefuSet.
+  name: MEMORY_LIMIT
+  required: true
+  value: 1000Mi
+- displayName: JVM Heap
+  description: Java memory heap size. Set it as half as your memory limit. Use units m or g.
+  name: KAFKA_HEAP_OPTS
+  required: true
+  value: "-Xmx500m -Xms500m"

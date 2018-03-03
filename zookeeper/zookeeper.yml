@@ -1,0 +1,228 @@
+apiVersion: v1
+kind: Template
+message: |-
+  The following service have been created in your project: ${SERVICE_NAME}
+
+    Zookeeper Host: ${SERVICE_NAME}
+    Zookeeper Port: 2181
+
+  To scale this Zookeeper cluster use command below:
+  $ oc scale statefulset ${SERVICE_NAME} --replicas=X
+
+metadata:
+  name: zookeeper
+  annotations:
+    description: |-
+      Zookeeper 3.4.11 is a centralized service for maintaining configuration information, naming, providing distributed synchronization, and providing group services.
+    iconClass: icon-apache
+    openshift.io/display-name: Apache Zookeeper - replicated
+    tags: zookeeper
+    template.openshift.io/provider-display-name: AbarCloud
+
+objects:
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      application: ${SERVICE_NAME}
+    name: ${SERVICE_NAME}-headless
+  spec:
+    clusterIP: None
+    portalIP: None
+    ports:
+    - name: server
+      port: 2888
+      protocol: TCP
+      targetPort: 2888
+    - name: leader-election
+      port: 3888
+      protocol: TCP
+      targetPort: 3888
+    selector:
+      application: ${SERVICE_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      application: ${SERVICE_NAME}
+    name: ${SERVICE_NAME}
+  spec:
+    ports:
+    - name: client
+      port: 2181
+      protocol: TCP
+      targetPort: 2181
+    selector:
+      application: ${SERVICE_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+
+- apiVersion: v1
+  kind: ConfigMap
+  data:
+    client.cnxns: "60"
+    init: "10"
+    jvm.heap: ${JVM_HEAP}
+    purge.interval: "0"
+    snap.retain: "3"
+    sync: "5"
+    tick: "2000"
+  metadata:
+    labels:
+      application: ${SERVICE_NAME}
+    name: ${SERVICE_NAME}-config
+
+- apiVersion: apps/v1beta1
+  kind: StatefulSet
+  metadata:
+    labels:
+      application: ${SERVICE_NAME}
+    name: ${SERVICE_NAME}
+  spec:
+    replicas: ${REPLICAS}
+    selector:
+      matchLabels:
+        application: ${SERVICE_NAME}
+    serviceName: ${SERVICE_NAME}-headless
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          application: ${SERVICE_NAME}
+      spec:
+        containers:
+        - command:
+          - sh
+          - -c
+          - bin/zkGenConfig.sh && bin/zkServer.sh start-foreground
+          env:
+          - name: ZK_REPLICAS
+            value: "${REPLICAS}"
+          - name: ZK_HEAP_SIZE
+            valueFrom:
+              configMapKeyRef:
+                key: jvm.heap
+                name: ${SERVICE_NAME}-config
+          - name: ZK_TICK_TIME
+            valueFrom:
+              configMapKeyRef:
+                key: tick
+                name: ${SERVICE_NAME}-config
+          - name: ZK_INIT_LIMIT
+            valueFrom:
+              configMapKeyRef:
+                key: init
+                name: ${SERVICE_NAME}-config
+          - name: ZK_SYNC_LIMIT
+            valueFrom:
+              configMapKeyRef:
+                key: tick
+                name: ${SERVICE_NAME}-config
+          - name: ZK_MAX_CLIENT_CNXNS
+            valueFrom:
+              configMapKeyRef:
+                key: client.cnxns
+                name: ${SERVICE_NAME}-config
+          - name: ZK_SNAP_RETAIN_COUNT
+            valueFrom:
+              configMapKeyRef:
+                key: snap.retain
+                name: ${SERVICE_NAME}-config
+          - name: ZK_PURGE_INTERVAL
+            valueFrom:
+              configMapKeyRef:
+                key: purge.interval
+                name: ${SERVICE_NAME}-config
+          - name: ZK_CLIENT_PORT
+            value: "2181"
+          - name: ZK_SERVER_PORT
+            value: "2888"
+          - name: ZK_ELECTION_PORT
+            value: "3888"
+          image: "172.30.150.55:5000/%NAMESPACE_HERE%/zookeeper:3.4.11"
+          imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+              - bin/zkOk.sh
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: zookeeper
+          ports:
+          - containerPort: 2181
+            name: client
+            protocol: TCP
+          - containerPort: 2888
+            name: server
+            protocol: TCP
+          - containerPort: 3888
+            name: leader-election
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - /opt/zookeeper/bin/zkOk.sh
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            limits:
+              memory: ${MEMORY_LIMIT}
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /var/lib/zookeeper
+            name: datadir
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 30
+    volumeClaimTemplates:
+    - metadata:
+        labels:
+          application: ${SERVICE_NAME}
+        name: datadir
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: ${VOLUME_CAPACITY}
+#
+# Parameters
+#
+parameters:
+- displayName: Service Name
+  description: The name used when creating the required StatefulSet, Secret, Service etc. Must be unique and contain only lower-case letters.
+  name: SERVICE_NAME
+  required: true
+  value: zookeeper
+- displayName: Replicas
+  description: Number of Zookeeper replicas. Must be an odd number 1, 3, 5 etc.
+  name: REPLICAS
+  required: true
+  value: "1"
+- displayName: Volume Capacity
+  description: Volume space available for data, e.g. 1Gi, 5Gi.
+  name: VOLUME_CAPACITY
+  required: true
+  value: 1Gi
+- displayName: Memory Limit
+  description: Maximum amount of memory the container can use, e.g. 200Mi, 500Mi, 1000Mi. This
+    can be modified later in the StatefuSet.
+  name: MEMORY_LIMIT
+  required: true
+  value: 1000Mi
+- displayName: JVM Heap
+  description: Java memory heap size. Set it as half as your memory limit. Use units m or g.
+  name: JVM_HEAP
+  required: true
+  value: 500m
+
