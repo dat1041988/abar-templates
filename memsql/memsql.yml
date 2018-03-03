@@ -1,6 +1,15 @@
 apiVersion: v1
 kind: Template
+message: |-
+  The following service(s) have been created in your project: ${SERVICE_NAME}.
 metadata:
+  annotations:
+    description: |-
+      MemSQL 6.0, with persistent storage.
+    iconClass: icon-memsql
+    openshift.io/display-name: MemSQL
+    tags: database,memsql
+    template.openshift.io/provider-display-name: AbarCloud
   name: memsql
 
 objects:
