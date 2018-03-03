@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Template
+objects:
+
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: memsql
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: memsql-latest
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: 'memsql:6.0.14'
+    runPolicy: Serial
+    source:
+      git:
+        ref: master
+        uri: 'https://github.com/abarcloud/memsql-openshift.git'
+      type: Git
+    strategy:
+      type: Docker
+    triggers:
+      - type: ConfigChange
