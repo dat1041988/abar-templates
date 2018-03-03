@@ -173,10 +173,10 @@ parameters:
 
   - name: MEMORY_LIMIT
     displayName: Memory Limit
-    description: Maximum amount of memory each Elasticsearch container can use, e.g. 1Gi, 2Gi.
+    description: Maximum amount of memory each Elasticsearch container can use, e.g. 1000Mi, 2000Mi.
       This can be modified later in the StatefulSet.
     required: true
-    value: 1Gi
+    value: 1000Mi
 
   - name: ELASTIC_NODE_COUNT
     displayName: Elasticsearch Node Count

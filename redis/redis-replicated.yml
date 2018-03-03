@@ -173,7 +173,7 @@ parameters:
   required: true
   value: 1Gi
 - displayName: Memory Limit
-  description: Maximum amount of memory the container can use, e.g. 200Mi, 500Mi, 1Gi. This
+  description: Maximum amount of memory the container can use, e.g. 200Mi, 500Mi, 1000Mi. This
     can be modified later in the DeploymentConfig. Replication needs at least 200Mi
   name: MEMORY_LIMIT
   required: true

@@ -146,7 +146,7 @@ objects:
 parameters:
 - name: MEMORY_LIMIT
   displayName: Memory Limit
-  description: Maximum amount of memory the cronjob can use.
+  description: Maximum amount of memory the cronjob can use. e.g. 500Mi, 1000Mi.
   required: true
   value: 200Mi
 
