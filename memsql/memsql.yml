@@ -98,32 +98,17 @@ objects:
     annotations:
     labels:
       app: "${SERVICE_NAME}"
-    name: "${SERVICE_NAME}-db"
+    name: "${SERVICE_NAME}"
   spec:
     ports:
-    - name: 3306-tcp
-      port: 3306
-      protocol: TCP
-      targetPort: 3306
-    selector:
-      app: "${SERVICE_NAME}"
-      deploymentconfig: "${SERVICE_NAME}"
-    sessionAffinity: None
-    type: ClusterIP
-
-- apiVersion: v1
-  kind: Service
-  metadata:
-    annotations:
-    labels:
-      app: "${SERVICE_NAME}"
-    name: "${SERVICE_NAME}-web"
-  spec:
-    ports:
-    - name: 9000-tcp
+    - name: web-9000-tcp
       port: 9000
       protocol: TCP
       targetPort: 9000
+    - name: db-3306-tcp
+      port: 3306
+      protocol: TCP
+      targetPort: 3306
     selector:
       app: "${SERVICE_NAME}"
       deploymentconfig: "${SERVICE_NAME}"
