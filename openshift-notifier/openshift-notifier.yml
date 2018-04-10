@@ -21,6 +21,24 @@ objects:
     telegram-bot-token: ${TELEGRAM_BOT_TOKEN}
 
 - apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: ${SERVICE_NAME}
+    labels:
+      app: ${SERVICE_NAME}
+  data:
+    skip-conditions.yml: |-
+      info:
+      - reason: FailedScheduling
+      warning:
+      - type: Normal
+      - reason: FailedScheduling
+      error:
+      - type: Normal
+      - type: Warning
+      - reason: FailedScheduling
+
+- apiVersion: v1
   kind: ServiceAccount
   metadata:
     name: ${SERVICE_NAME}
@@ -88,12 +106,18 @@ objects:
                 name: ${SERVICE_NAME}
                 key: telegram-bot-token
           volumeMounts:
-          - mountPath: /var/${SERVICE_NAME}
+          - mountPath: /var/openshift-notifier/data
             name: ${SERVICE_NAME}-db
+          - mountPath: /var/openshift-notifier/skip-conditions.yml
+            name: ${SERVICE_NAME}-config
+            subPath: skip-conditions.yml
         volumes:
         - name: ${SERVICE_NAME}-db
           persistentVolumeClaim:
             claimName: ${SERVICE_NAME}
+        - name: ${SERVICE_NAME}-config
+          configMap:
+            name: ${SERVICE_NAME}
 
 parameters:
 - name: SERVICE_NAME

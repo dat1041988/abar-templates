@@ -13,19 +13,11 @@ SLACK_CHANNEL = ENV['SLACK_CHANNEL']
 TELEGRAM_BOT_TOKEN = ENV['TELEGRAM_BOT_TOKEN']
 TELEGRAM_GROUP_ID = ENV['TELEGRAM_GROUP_ID']
 NOTIFICATION_LEVEL = ENV['NOTIFICATION_LEVEL'] || 'info'
-DB_PATH = '/var/openshift-notifier/db.yml'
+DB_PATH = '/var/openshift-notifier/data/db.yml'
+SKIP_CONDITIONS_FILE = '/var/openshift-notifier/skip-conditions.yml'
 
 # Let's skip the non-error ones at the moment
-SKIP_CONDITIONS = {
-  'info' => [],
-  'warning' => [
-    {'type' => 'Normal'}
-  ],
-  'error' => [
-    {'type' => 'Normal'},
-    {'type' => 'Warning'}
-  ]
-}
+SKIP_CONDITIONS = YAML.load(File.read(SKIP_CONDITIONS_FILE))
 
 COLOR_CONDITIONS = [
   [{'type' => 'Normal'}, 'good'],
@@ -93,15 +85,15 @@ def send_event_notification(event)
   color = map_color(event)
 
   if !TELEGRAM.nil?
-    TELEGRAM.api.send_message(chat_id: TELEGRAM_CHAT_ID, text: sprintf(
+    TELEGRAM.api.send_message(chat_id: TELEGRAM_CHAT_ID, parse_mode: 'markdown', text: sprintf(
       "Namespace: `%s`\n" +
       "Type: #%s\n" +
       "Object Kind: #%s\n" +
       "Object Name: `%s`\n" +
       "Reason: #%s\n" +
-      "Component: #%s\n" +
-      "First timestamp: %s\n" +
-      "Last timestamp: %s\n",
+      "Component: `%s`\n" +
+      "First timestamp: _%s_\n" +
+      "Last timestamp: _%s_\n",
       event['metadata']['namespace'],
       event['type'],
       obj_kind,
