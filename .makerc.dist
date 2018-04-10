@@ -1,3 +1,7 @@
 # All Templates, BuildConfigs and ImageStreams will be created in this namespace.
 # To customize namespace for development, copy this file as .makerc and replace namespace below.
 NAMESPACE=openshift
+
+# Specify the repository and ref-spec (i.e. branch) to build the templates from.
+REPOSITORY_URL=https://github.com/abarcloud/abar-templates.git
+REPOSITORY_REF=master

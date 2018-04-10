@@ -9,13 +9,31 @@ endif
 
 **/*/imagestream.yml:
 	@echo "Processing and uploading imagestream in namespace $(NAMESPACE): ${@}" && \
-	oc process -n $(NAMESPACE) -f $@ | oc create -n $(NAMESPACE) -f - 2> /dev/null || \
-	oc process -n $(NAMESPACE) -f $@ | oc replace -n $(NAMESPACE) -f -
+	cat $@ \
+    | sed "s|[<]NAMESPACE_HERE[>]|$(NAMESPACE)|" \
+    | sed "s|[<]REPOSITORY_URL_HERE[>]|$(REPOSITORY_URL)|" \
+    | sed "s|[<]REPOSITORY_REF_HERE[>]|$(REPOSITORY_REF)|" \
+    | oc process -n $(NAMESPACE) -f - \
+    | oc create -n $(NAMESPACE) -f - 2> /dev/null || \
+	cat $@ \
+    | sed "s|[<]NAMESPACE_HERE[>]|$(NAMESPACE)|" \
+    | sed "s|[<]REPOSITORY_URL_HERE[>]|$(REPOSITORY_URL)|" \
+    | sed "s|[<]REPOSITORY_REF_HERE[>]|$(REPOSITORY_REF)|" \
+    | oc process -n $(NAMESPACE) -f - \
+    | oc replace -n $(NAMESPACE) -f -
 
 **/*.yml:
 	@echo "Uploading template in namespace $(NAMESPACE): ${@}" && \
-	cat $@ | sed "s/%NAMESPACE_HERE%/$(NAMESPACE)/" | oc create -n $(NAMESPACE) -f - 2> /dev/null || \
-	cat $@ | sed "s/%NAMESPACE_HERE%/$(NAMESPACE)/" | oc replace -n $(NAMESPACE) -f -
+	cat $@ \
+	  | sed "s|[<]NAMESPACE_HERE[>]|$(NAMESPACE)|" \
+	  | sed "s|[<]REPOSITORY_URL_HERE[>]|$(REPOSITORY_URL)|" \
+	  | sed "s|[<]REPOSITORY_REF_HERE[>]|$(REPOSITORY_REF)|" \
+	  | oc create -n $(NAMESPACE) -f - 2> /dev/null || \
+	cat $@ \
+	  | sed "s|[<]NAMESPACE_HERE[>]|$(NAMESPACE)|" \
+	  | sed "s|[<]REPOSITORY_URL_HERE[>]|$(REPOSITORY_URL)|" \
+	  | sed "s|[<]REPOSITORY_REF_HERE[>]|$(REPOSITORY_REF)|" \
+	  | oc replace -n $(NAMESPACE) -f -
 
 imagestreams: **/*/imagestream.yml
 

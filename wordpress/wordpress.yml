@@ -96,7 +96,7 @@ objects:
       spec:
         containers:
         - name: wordpress
-          image: "172.30.150.55:5000/%NAMESPACE_HERE%/wordpress:4.8-php7-apache"
+          image: "172.30.150.55:5000/<NAMESPACE_HERE>/wordpress:4.8-php7-apache"
           env:
           - name: WORDPRESS_DB_HOST
             valueFrom:

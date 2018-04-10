@@ -1,29 +1,27 @@
 apiVersion: v1
 kind: Template
-metadata:
-  name: kafka
 objects:
 
 - apiVersion: v1
   kind: ImageStream
   metadata:
-    name: kafka
+    name: openshift-notifier
 
 - apiVersion: v1
   kind: BuildConfig
   metadata:
-    name: kafka-latest
+    name: openshift-notifier-latest
   spec:
     output:
       to:
         kind: ImageStreamTag
-        name: 'kafka:1.0.0'
+        name: 'openshift-notifier:latest'
     runPolicy: Serial
     source:
       git:
         ref: '<REPOSITORY_REF_HERE>'
         uri: '<REPOSITORY_URL_HERE>'
-      contextDir: 'kafka/latest'
+      contextDir: 'openshift-notifier/latest'
       type: Git
     strategy:
       type: Docker

@@ -19,7 +19,7 @@ objects:
     runPolicy: Serial
     source:
       git:
-        ref: master
+        ref: '<REPOSITORY_REF_HERE>'
         uri: 'https://github.com/abarcloud/memsql-openshift.git'
       type: Git
     strategy:

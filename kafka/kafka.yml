@@ -101,7 +101,7 @@ objects:
             value: ${KAFKA_MIN_INSYNC_REPLICAS}
           - name: ZOOKEEPER_HOST
             value: ${ZOOKEEPER_HOST}
-          image: "172.30.150.55:5000/%NAMESPACE_HERE%/kafka:1.0.0"
+          image: "172.30.150.55:5000/<NAMESPACE_HERE>/kafka:1.0.0"
           imagePullPolicy: Always
           name: kafka
           ports:

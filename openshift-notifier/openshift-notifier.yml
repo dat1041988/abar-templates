@@ -1,0 +1,125 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: openshift-notifier
+  annotations:
+    openshift.io/display-name: OpenShift Notifier
+    template.openshift.io/provider-display-name: AbarCloud
+    description: Notify OpenShift events via Slack and Telegram channels
+    iconClass: icon-ruby
+    tags: monitoring
+objects:
+
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${SERVICE_NAME}
+    labels:
+      app: ${SERVICE_NAME}
+  stringData:
+    slack-token: ${SLACK_TOKEN}
+    telegram-bot-token: ${TELEGRAM_BOT_TOKEN}
+
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: ${SERVICE_NAME}
+
+- apiVersion: v1
+  groupNames:
+  kind: RoleBinding
+  metadata:
+    name: ${SERVICE_NAME}-view
+  roleRef:
+    name: view
+  subjects:
+  - kind: ServiceAccount
+    name: ${SERVICE_NAME}
+
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${SERVICE_NAME}
+    labels:
+      app: ${SERVICE_NAME}
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: 1Gi
+
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name: ${SERVICE_NAME}
+    labels:
+      app: ${SERVICE_NAME}
+  spec:
+    replicas: 1
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        name: ${SERVICE_NAME}
+        labels:
+          app: ${SERVICE_NAME}
+      spec:
+        serviceAccount: ${SERVICE_NAME}
+        containers:
+        - name: notifier
+          image: "172.30.150.55:5000/<NAMESPACE_HERE>/openshift-notifier:latest"
+          imagePullPolicy: Always
+          env:
+          - name: NOTIFICATION_LEVEL
+            value: ${NOTIFICATION_LEVEL}
+          - name: SLACK_CHANNEL
+            value: ${SLACK_CHANNEL}
+          - name: SLACK_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: ${SERVICE_NAME}
+                key: slack-token
+          - name: TELEGRAM_GROUP_ID
+            value: ${TELEGRAM_GROUP_ID}
+          - name: TELEGRAM_BOT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: ${SERVICE_NAME}
+                key: telegram-bot-token
+          volumeMounts:
+          - mountPath: /var/${SERVICE_NAME}
+            name: ${SERVICE_NAME}-db
+        volumes:
+        - name: ${SERVICE_NAME}-db
+          persistentVolumeClaim:
+            claimName: ${SERVICE_NAME}
+
+parameters:
+- name: SERVICE_NAME
+  description: The name used when creating the required DeploymentConfig, ConfigMap, Secrets etc.
+    Must be unique and contain only lower-case letters.
+  displayName: Service Name
+  value: openshift-notifier
+  required: true
+- name: NOTIFICATION_LEVEL
+  displayName: Notification Level
+  description: The level of notications to send. Levels are info, warning, error.
+  value: info
+  required: true
+- name: SLACK_TOKEN
+  displayName: Slack API Token
+  description: The API Token for the Slack bot.
+  required: false
+- name: SLACK_CHANNEL
+  displayName: Slack Channel
+  description: The Slack channel to post the event notifications to.
+  required: false
+- name: TELEGRAM_BOT_TOKEN
+  displayName: Telegam Bot Token
+  description: The Telegram bot token provided by @BotFather
+  required: false
+- name: TELEGRAM_GROUP_ID
+  displayName: Telegram Group ID
+  description: Name or ID of the Telegram group to send messages to. e.g. @group_name or -11111111111
+  required: false

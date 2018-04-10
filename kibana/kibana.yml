@@ -72,7 +72,7 @@ objects:
         spec:
           containers:
           - name: kibana
-            image: "172.30.150.55:5000/%NAMESPACE_HERE%/kibana:6.1.1"
+            image: "172.30.150.55:5000/<NAMESPACE_HERE>/kibana:6.1.1"
             imagePullPolicy: IfNotPresent
             env:
             - name: ELASTICSEARCH_URL

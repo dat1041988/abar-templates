@@ -70,7 +70,7 @@ objects:
                 value: "${OSS_PATH}"
               - name: BACKUP_CONFIG
                 value: "/etc/backup-config/config.json"
-              image: "172.30.150.55:5000/%NAMESPACE_HERE%/database-backup:1.0"
+              image: "172.30.150.55:5000/<NAMESPACE_HERE>/database-backup:1.0"
               resources:
                 limits:
                   memory: 200Mi
@@ -106,7 +106,7 @@ objects:
       spec:
         containers:
         - name: database-backup-restore
-          image: "172.30.150.55:5000/%NAMESPACE_HERE%/database-backup:1.0"
+          image: "172.30.150.55:5000/<NAMESPACE_HERE>/database-backup:1.0"
           imagePullPolicy: IfNotPresent
           env:
           - name: OSS_ID
