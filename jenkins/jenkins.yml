@@ -1,0 +1,167 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: jenkins
+  annotations:
+    openshift.io/display-name: Jenkins
+    openshift.io/support-url: https://docs.abarcloud.com/support.html
+    openshift.io/documentation-url: https://docs.abarcloud.com/learn/continuous-integration.html
+    description: |-
+      An automation server for the non-human part of the software development process,
+      with continuous integration and facilitating continuous delivery.
+
+      Scaling to more than one replica is not supported.
+
+    iconClass: icon-jenkins
+    tags: instant-app,jenkins
+
+message: |-
+    Jenkins service has been created in your project.
+
+      Username: admin
+      Password: ${JENKINS_PASSWORD}
+
+    After a few minutes you will able to log into Jenkins web interface.
+objects:
+
+- apiVersion: v1
+  kind: Route
+  metadata:
+    annotations:
+      haproxy.router.openshift.io/timeout: 4m
+      template.openshift.io/expose-uri: http://{.spec.host}{.spec.path}
+    name: jenkins
+  spec:
+    port:
+      targetPort: web
+    tls:
+      insecureEdgeTerminationPolicy: Redirect
+      termination: edge
+    to:
+      kind: Service
+      name: jenkins
+
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: jenkins
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: "${VOLUME_CAPACITY}"
+
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      template.alpha.openshift.io/wait-for-ready: 'true'
+    name: jenkins
+  spec:
+    replicas: 1
+    selector:
+      name: jenkins
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          name: jenkins
+      spec:
+        containers:
+        - env:
+          - name: JENKINS_PASSWORD
+            value: ${JENKINS_PASSWORD}
+          - name: INSTALL_PLUGINS
+            value: "pipeline-githubnotify-step:1.0.4,github-branch-source:2.3.3,github-scm-trait-notification-context:1.1"
+          image: "openshift/jenkins-2-centos7:v3.10"
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 2
+            httpGet:
+              path: "/login"
+              port: 8080
+            initialDelaySeconds: 420
+            periodSeconds: 360
+            timeoutSeconds: 240
+          name: jenkins
+          readinessProbe:
+            httpGet:
+              path: "/login"
+              port: 8080
+            initialDelaySeconds: 3
+            timeoutSeconds: 240
+          resources:
+            limits:
+              memory: ${MEMORY_LIMIT}
+          terminationMessagePath: "/dev/termination-log"
+          volumeMounts:
+          - mountPath: "/var/lib/jenkins"
+            name: jenkins-data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        serviceAccountName: jenkins
+        volumes:
+        - name: jenkins-data
+          persistentVolumeClaim:
+            claimName: jenkins
+    triggers:
+    - type: ConfigChange
+
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: jenkins
+
+- apiVersion: v1
+  groupNames:
+  kind: RoleBinding
+  metadata:
+    name: jenkins-edit
+  roleRef:
+    name: edit
+  subjects:
+  - kind: ServiceAccount
+    name: jenkins
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: jenkins
+  spec:
+    ports:
+    - name: agent
+      nodePort: 0
+      port: 50000
+      protocol: TCP
+      targetPort: 50000
+    - name: web
+      nodePort: 0
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      name: jenkins
+    sessionAffinity: None
+    type: ClusterIP
+
+parameters:
+
+- name: JENKINS_PASSWORD
+  displayName: Admin Password
+  description: Password for the Jenkins "admin" user. Leave this empty if you'd
+    like it to be auto-generated.
+  from: '[a-zA-Z0-9]{16}'
+  generate: expression
+  required: true
+- description: Maximum amount of memory Jenkins container can use.
+  displayName: Memory Limit
+  name: MEMORY_LIMIT
+  value: 1000Mi
+- description: Volume space available for plugins, configurations and builds data, e.g. 1Gi, 5Gi etc.
+  displayName: Volume Capacity
+  name: VOLUME_CAPACITY
+  required: true
+  value: 1Gi
+
