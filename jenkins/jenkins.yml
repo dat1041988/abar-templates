@@ -8,7 +8,7 @@ metadata:
     openshift.io/documentation-url: https://docs.abarcloud.com/learn/continuous-integration.html
     description: |-
       An automation server for the non-human part of the software development process,
-      with continuous integration and facilitating continuous delivery.
+      with continuous integration (CI) and facilitating continuous delivery (CD).
 
       Scaling to more than one replica is not supported.
 
@@ -161,14 +161,14 @@ parameters:
   displayName: Memory Limit
   name: MEMORY_LIMIT
   value: 1000Mi
-- description: Volume space available for plugins, configurations and builds data, e.g. 1Gi, 5Gi etc.
+- description: Volume space available for plugins, configurations and build data, e.g. 1Gi, 5Gi etc.
   displayName: Volume Capacity
   name: VOLUME_CAPACITY
   required: true
   value: 1Gi
 - name: ROUTE_PREFIX
   displayName: Route prefix for .abar.cloud
-  description: Leave it empty for a random prefix. If you need to customize we recommend "jenkins-myorg-build".
+  description: Leave it empty for a random prefix. If you need to customize it, we recommend "jenkins-myproject-build".
     Must be unique across all projects, and contain only lower-case letters, numbers and dashes.
   generate: expression
   from: "jenkins-[a-z0-9]{5}"
