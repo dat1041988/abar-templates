@@ -21,7 +21,9 @@ message: |-
       Username: admin
       Password: ${JENKINS_PASSWORD}
 
-    After a few minutes you will able to log into Jenkins web interface.
+    After a few minutes you will able to log into Jenkins web interface on:
+      https://${ROUTE_PREFIX}.abar.cloud
+
 objects:
 
 - apiVersion: v1
@@ -29,9 +31,9 @@ objects:
   metadata:
     annotations:
       haproxy.router.openshift.io/timeout: 4m
-      template.openshift.io/expose-uri: http://{.spec.host}{.spec.path}
     name: jenkins
   spec:
+    host: ${ROUTE_PREFIX}.abar.cloud
     port:
       targetPort: web
     tls:
@@ -164,4 +166,10 @@ parameters:
   name: VOLUME_CAPACITY
   required: true
   value: 1Gi
-
+- name: ROUTE_PREFIX
+  displayName: Route prefix for .abar.cloud
+  description: Leave it empty for a random prefix. If you need to customize we recommend "jenkins-myorg-build".
+    Must be unique across all projects, and contain only lower-case letters, numbers and dashes.
+  generate: expression
+  from: "jenkins-[a-z0-9]{5}"
+  required: true
