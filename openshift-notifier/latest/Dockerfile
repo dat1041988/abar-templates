@@ -1,22 +1,22 @@
 FROM centos/ruby-23-centos7
 
+ENV OC_VERSION=v3.7.0 \
+    OC_TAG_SHA=7ed6862
+
 USER root
 
-RUN yum install -y wget && \
-    yum clean all -y
+RUN yum install -y curl && \
+    yum clean all -y && \
+    curl -sL -o /tmp/oc.tar.gz https://github.com/openshift/origin/releases/download/${OC_VERSION}/openshift-origin-client-tools-${OC_VERSION}-${OC_TAG_SHA}-linux-64bit.tar.gz && \
+    tar xzvf /tmp/oc.tar.gz -C /tmp/ && \
+    mv /tmp/openshift-origin-client-tools-${OC_VERSION}-${OC_TAG_SHA}-linux-64bit/oc /usr/local/bin/oc && \
+    rm -rf /tmp/oc.tar.gz /tmp/openshift-origin-client-tools-${OC_VERSION}-${OC_TAG_SHA}-linux-64bit && \
+    mkdir /.kube && \
+    chmod -R g+ws /.kube
 
-RUN wget https://github.com/openshift/origin/releases/download/v1.5.0/openshift-origin-client-tools-v1.5.0-031cbe4-linux-64bit.tar.gz && \
-  tar xzf openshift-origin-client-tools-v1.5.0-031cbe4-linux-64bit.tar.gz && \
-  mv openshift-origin-client-tools-v1.5.0-031cbe4-linux-64bit/oc /usr/local/bin/
-
-RUN mkdir /.kube && chmod -R g+ws /.kube
-
-COPY Gemfile .
-COPY Gemfile.lock .
-RUN scl enable rh-ruby23 "bundle install"
-
-COPY notifier.rb .
-RUN chmod +x notifier.rb
+COPY Gemfile Gemfile.lock notifier.rb ./
+RUN scl enable rh-ruby23 "bundle install" && \
+    chmod +x notifier.rb
 
 USER 1001
 

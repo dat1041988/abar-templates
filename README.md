@@ -7,12 +7,13 @@ To customize a template and publish in your project:
 
 1. Fork this repository.
 2. Set your namespace (i.e. project name) and repository URL in `.makerc.dist`
-3. Customize any of the templates
-4. Use make to upload the template (e.g. `redis`) to your project.
+3. Customize any of the templates.
+4. Make sure you are logged in via [`oc` CLI](https://docs.abarcloud.com/management/cli-login.html).
+5. Use `make` to upload the template (e.g. `redis`) to your project.
    ```sh
    make redis/
    ```
-5. From AbarCloud dashboard > Add to Project, find your template e.g. by searching it's name.  
+6. From AbarCloud dashboard > Add to Project, find your template e.g. by searching it's name.  
    Notice the **Namespace: my-project** in template description, to find your customized version.
 
 * After pushing your changes you must manually `Start build`

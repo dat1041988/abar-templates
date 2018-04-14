@@ -14,7 +14,7 @@ oc new-app openshift-notifier.yml -p \
   SLACK_TOKEN=YOUR_SLACK_TOKEN \
   SLACK_CHANNEL=#your-slack-channel \
   TELEGRAM_BOT_TOKEN=000000000:XXXXXXXXXXXXXXXXXXXXXXX \
-  TELEGRAM_GROUP_ID=@group_name \
+  TELEGRAM_GROUP_ID=@group_name_or_id_here \
   NOTIFICATION_LEVEL=info
 ```
 
