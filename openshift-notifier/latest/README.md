@@ -14,13 +14,13 @@ Or use [`oc` CLI](https://docs.abarcloud.com/management/cli-login.html):
 oc new-app openshift-notifier.yml -p \
   SLACK_TOKEN=YOUR_SLACK_TOKEN \
   SLACK_CHANNEL=YOUR_SLACK_CHANNEL \
-  NOTIFICATION_LEVEL=info
+  NOTIFICATION_LEVEL=warning
 
 # For Telegram notifications
 oc new-app openshift-notifier.yml -p \
   TELEGRAM_BOT_TOKEN=000000000:XXXXXXXXXXXXXXXXXXXXXXX \
   TELEGRAM_GROUP_ID=GROUP_NAME_OR_ID_HERE \
-  NOTIFICATION_LEVEL=info
+  NOTIFICATION_LEVEL=warning
 ```
 
 ### Notification level
