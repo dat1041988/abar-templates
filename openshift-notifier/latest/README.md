@@ -10,11 +10,16 @@ You can either install OpenShift Notifier via AbarCloud dashboard > Add to Proje
 
 Or use [`oc` CLI](https://docs.abarcloud.com/management/cli-login.html):  
 ```sh
+# For Slack notifications
 oc new-app openshift-notifier.yml -p \
   SLACK_TOKEN=YOUR_SLACK_TOKEN \
-  SLACK_CHANNEL=#your-slack-channel \
+  SLACK_CHANNEL=YOUR_SLACK_CHANNEL \
+  NOTIFICATION_LEVEL=info
+
+# For Telegram notifications
+oc new-app openshift-notifier.yml -p \
   TELEGRAM_BOT_TOKEN=000000000:XXXXXXXXXXXXXXXXXXXXXXX \
-  TELEGRAM_GROUP_ID=@group_name_or_id_here \
+  TELEGRAM_GROUP_ID=GROUP_NAME_OR_ID_HERE \
   NOTIFICATION_LEVEL=info
 ```
 

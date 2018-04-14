@@ -129,21 +129,23 @@ parameters:
 - name: NOTIFICATION_LEVEL
   displayName: Notification Level
   description: The level of notications to send. Levels are info, warning, error.
-  value: info
+  value: warning
   required: true
 - name: SLACK_TOKEN
   displayName: Slack API Token
-  description: The API Token for the Slack bot.
+  description: The API Token for the Slack bot. Leave this empty if Slack is not being used.
   required: false
 - name: SLACK_CHANNEL
   displayName: Slack Channel
-  description: The Slack channel to post the event notifications to.
+  description: The Slack channel to post the event notifications to. Leave this empty if Slack is not being used.
   required: false
 - name: TELEGRAM_BOT_TOKEN
   displayName: Telegam Bot Token
-  description: The Telegram bot token provided by @BotFather
+  description: The Telegram bot token provided by @BotFather. Leave this empty if Telegam is not being used.
   required: false
 - name: TELEGRAM_GROUP_ID
   displayName: Telegram Group ID
-  description: Name or ID of the Telegram group to send messages to. e.g. @group_name or -11111111111
+  description: -|
+    Name or ID of the Telegram group to send messages to. e.g. @group_name or -11111111111
+    Leave this empty if Telegam is not being used.
   required: false

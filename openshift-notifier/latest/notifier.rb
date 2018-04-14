@@ -12,7 +12,7 @@ SLACK_TOKEN = ENV['SLACK_TOKEN']
 SLACK_CHANNEL = ENV['SLACK_CHANNEL']
 TELEGRAM_BOT_TOKEN = ENV['TELEGRAM_BOT_TOKEN']
 TELEGRAM_GROUP_ID = ENV['TELEGRAM_GROUP_ID']
-NOTIFICATION_LEVEL = ENV['NOTIFICATION_LEVEL'] || 'info'
+NOTIFICATION_LEVEL = ENV['NOTIFICATION_LEVEL'] || 'warning'
 DB_PATH = '/var/openshift-notifier/data/db.yml'
 SKIP_CONDITIONS_FILE = '/var/openshift-notifier/skip-conditions.yml'
 
@@ -186,5 +186,5 @@ end
 while true
   LOGGER.info("==== POLLING EVENTS ====")
   poll_events
-  sleep 30
+  sleep rand(60..120)
 end

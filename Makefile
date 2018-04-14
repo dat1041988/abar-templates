@@ -40,7 +40,7 @@ imagestreams: **/*/imagestream.yml
 templates: **/*.yml
 
 */:
-	$(MAKE) $@*.yml || true
-	$(MAKE) $@*/imagestream.yml
+	$(MAKE) $@*/imagestream.yml || true
+	$(MAKE) $@*.yml
 
 all: imagestreams templates
