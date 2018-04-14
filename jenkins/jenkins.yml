@@ -22,7 +22,7 @@ message: |-
       Password: ${JENKINS_PASSWORD}
 
     After a few minutes you will able to log into Jenkins web interface on:
-      https://${ROUTE_PREFIX}.abar.cloud
+    https://${ROUTE_PREFIX}.abar.cloud
 
 objects:
 
@@ -152,8 +152,7 @@ parameters:
 
 - name: JENKINS_PASSWORD
   displayName: Admin Password
-  description: Password for the Jenkins "admin" user. Leave this empty if you'd
-    like it to be auto-generated.
+  description: Password for the Jenkins "admin" user. Leave this empty if you'd like it to be auto-generated.
   from: '[a-zA-Z0-9]{16}'
   generate: expression
   required: true
@@ -161,14 +160,14 @@ parameters:
   displayName: Memory Limit
   name: MEMORY_LIMIT
   value: 1000Mi
-- description: Volume space available for plugins, configurations and build data, e.g. 1Gi, 5Gi etc.
+- description: Volume space available for plugins, configurations and build data, e.g. 3Gi, 5Gi etc.
   displayName: Volume Capacity
   name: VOLUME_CAPACITY
   required: true
-  value: 1Gi
+  value: 2Gi
 - name: ROUTE_PREFIX
   displayName: Route prefix for .abar.cloud
-  description: Leave it empty for a random prefix. If you need to customize it, we recommend "jenkins-myproject-build".
+  description: Leave it empty for a random prefix. If you need to customize it, we recommend "jenkins-MyProjectHere".
     Must be unique across all projects, and contain only lower-case letters, numbers and dashes.
   generate: expression
   from: "jenkins-[a-z0-9]{5}"
