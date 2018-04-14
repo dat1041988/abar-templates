@@ -19,8 +19,8 @@ objects:
     runPolicy: Serial
     source:
       git:
-        ref: master
-        uri: 'https://github.com/abarcloud/abar-templates.git'
+        ref: '<REPOSITORY_REF_HERE>'
+        uri: '<REPOSITORY_URL_HERE>'
       contextDir: 'certbot/latest'
       type: Git
     strategy:
