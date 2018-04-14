@@ -6,7 +6,7 @@ RUN apk add --update --no-cache \
         bash \
         ca-certificates \
         wget \
-        certbot=0.23.0-r0 \
+        certbot=0.9.3-r0 \
     && \
     sed -i 's/listen\s*80/listen 8080/g' /etc/nginx/conf.d/default.conf && \
     chmod -R 777 /var/cache /var/run /usr/share/nginx/html && \
