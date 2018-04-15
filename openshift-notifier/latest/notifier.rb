@@ -8,10 +8,10 @@ require 'slack-ruby-client'
 require 'telegram/bot'
 
 LOGGER = Logger.new(STDOUT)
-SLACK_TOKEN = ENV['SLACK_TOKEN']
-SLACK_CHANNEL = ENV['SLACK_CHANNEL']
-TELEGRAM_BOT_TOKEN = ENV['TELEGRAM_BOT_TOKEN']
-TELEGRAM_GROUP_ID = ENV['TELEGRAM_GROUP_ID']
+SLACK_TOKEN = ENV['SLACK_TOKEN'] || ''
+SLACK_CHANNEL = ENV['SLACK_CHANNEL'] || ''
+TELEGRAM_BOT_TOKEN = ENV['TELEGRAM_BOT_TOKEN'] || ''
+TELEGRAM_GROUP_ID = ENV['TELEGRAM_GROUP_ID'] || ''
 NOTIFICATION_LEVEL = ENV['NOTIFICATION_LEVEL'] || 'warning'
 DB_PATH = '/var/openshift-notifier/data/db.yml'
 SKIP_CONDITIONS_FILE = '/var/openshift-notifier/skip-conditions.yml'
@@ -84,7 +84,7 @@ def send_event_notification(event)
   last_timestamp = Time.parse(event['lastTimestamp'])
   color = map_color(event)
 
-  if !TELEGRAM.nil?
+  if defined?(TELEGRAM)
     TELEGRAM.api.send_message(chat_id: TELEGRAM_CHAT_ID, parse_mode: 'markdown', text: sprintf(
       "Namespace: `%s`\n" +
       "Type: #%s\n" +
@@ -105,7 +105,7 @@ def send_event_notification(event)
     ))
   end
 
-  if !SLACK.nil?
+  if defined?(SLACK)
     SLACK.chat_postMessage(
       channel: SLACK_CHANNEL,
       text: event['message'],
