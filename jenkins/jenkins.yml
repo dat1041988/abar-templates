@@ -159,7 +159,7 @@ parameters:
 - description: Maximum amount of memory Jenkins container can use.
   displayName: Memory Limit
   name: MEMORY_LIMIT
-  value: 1000Mi
+  value: 2000Mi
 - description: Volume space available for plugins, configurations and build data, e.g. 3Gi, 5Gi etc.
   displayName: Volume Capacity
   name: VOLUME_CAPACITY
