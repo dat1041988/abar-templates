@@ -21,7 +21,8 @@ message: |-
       Username: admin
       Password: ${JENKINS_PASSWORD}
 
-    After a few minutes you will able to log into Jenkins web interface on:
+    It can take up to 10mins for Jenkins to start due to plugins being installed. You can check the pod
+    logs to see progress, and login to the web interface on:
     https://${ROUTE_PREFIX}.abar.cloud
 
 objects:
@@ -84,7 +85,7 @@ objects:
             httpGet:
               path: "/login"
               port: 8080
-            initialDelaySeconds: 420
+            initialDelaySeconds: 600
             periodSeconds: 360
             timeoutSeconds: 240
           name: jenkins
@@ -92,7 +93,7 @@ objects:
             httpGet:
               path: "/login"
               port: 8080
-            initialDelaySeconds: 3
+            initialDelaySeconds: 600
             timeoutSeconds: 240
           resources:
             limits:
