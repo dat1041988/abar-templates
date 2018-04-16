@@ -22,8 +22,8 @@ message: |-
       Password: ${JENKINS_PASSWORD}
 
     It can take up to 10mins for Jenkins to start due to plugins being installed. You can check the pod
-    logs to see progress, and login to the web interface on:
-    https://${ROUTE_PREFIX}.abar.cloud
+    logs to see progress. If the deployment fails, click on Deploy to try again.
+    Once the pod is ready, login to the web interface on: https://${ROUTE_PREFIX}.abar.cloud
 
 objects:
 
@@ -85,7 +85,7 @@ objects:
             httpGet:
               path: "/login"
               port: 8080
-            initialDelaySeconds: 600
+            initialDelaySeconds: 420
             periodSeconds: 360
             timeoutSeconds: 240
           name: jenkins
@@ -93,7 +93,7 @@ objects:
             httpGet:
               path: "/login"
               port: 8080
-            initialDelaySeconds: 600
+            initialDelaySeconds: 3
             timeoutSeconds: 240
           resources:
             limits:
