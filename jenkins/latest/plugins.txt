@@ -1,0 +1,4 @@
+pipeline-github:2.0
+pipeline-githubnotify-step:1.0.4
+github-branch-source:2.3.3
+github-scm-trait-notification-context:1.1

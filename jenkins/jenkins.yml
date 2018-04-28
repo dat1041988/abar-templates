@@ -76,9 +76,7 @@ objects:
         - env:
           - name: JENKINS_PASSWORD
             value: ${JENKINS_PASSWORD}
-          - name: INSTALL_PLUGINS
-            value: "pipeline-github:2.0,pipeline-githubnotify-step:1.0.4,github-branch-source:2.3.3,github-scm-trait-notification-context:1.1"
-          image: "openshift/jenkins-2-centos7:v3.10"
+          image: "172.30.150.55:5000/<NAMESPACE_HERE>/jenkins:2-centos7-oc-v3.10"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 2
