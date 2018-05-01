@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Template
+objects:
+
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: pgadmin4
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: pgadmin4-latest
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: 'pgadmin4:3'
+    runPolicy: Serial
+    source:
+      git:
+        ref: '<REPOSITORY_REF_HERE>'
+        uri: '<REPOSITORY_URL_HERE>'
+      contextDir: 'pgadmin4/latest'
+      type: Git
+    strategy:
+      type: Docker
+    triggers:
+      - type: ConfigChange

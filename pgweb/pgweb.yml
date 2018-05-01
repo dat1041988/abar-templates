@@ -3,8 +3,8 @@ kind: Template
 metadata:
   name: pgweb
   annotations:
-    openshift.io/display-name: PostgreSQL web client
-    description: Pgweb enables you to view your schema and run full SQL queries from within a web UI.
+    openshift.io/display-name: pgweb for PostgreSQL
+    description: pgweb enables you to view your schema and run full SQL queries from within a web UI.
     iconClass: icon-postgresql
     tags: database,postgresql
 message:
