@@ -6,8 +6,12 @@ require 'time'
 require 'yaml'
 require 'slack-ruby-client'
 require 'telegram/bot'
+require 'net/http'
+require 'uri'
+require 'json'
 
 LOGGER = Logger.new(STDOUT)
+ALERTMANAGER_URL = ENV['ALERTMANAGER_URL'] || ''
 SLACK_TOKEN = ENV['SLACK_TOKEN'] || ''
 SLACK_CHANNEL = ENV['SLACK_CHANNEL'] || ''
 TELEGRAM_BOT_TOKEN = ENV['TELEGRAM_BOT_TOKEN'] || ''
@@ -149,6 +153,43 @@ def send_event_notification(event)
         ]
       ]
     )
+  end
+
+  if !ALERTMANAGER_URL.empty?
+    uri = URI.parse(sprintf("%s/api/v1/alerts", ALERTMANAGER_URL))
+
+    header = {'Content-Type': 'application/json'}
+
+    alerts = [
+      {
+        labels: {
+            alertname: "Event Notifier",
+            instance: sprintf("%s/%s", obj_kind, obj_name),
+            namespace: event['metadata']['namespace'],
+            kind: obj_kind,
+            object: obj_name,
+            reason: event['reason'],
+            component: component,
+            node: event['source']['host'],
+        },
+        annotations:{
+            message: event['message'],
+            severity: event['type'],
+            summary: sprintf("%s (%s): %s", obj_kind, obj_name, event['reason'])
+        },
+        startsAt: event['firstTimestamp'],
+        endsAt: event['lastTimestamp'],
+        generatorURL: event['metadata']['selfLink'],
+      }
+    ]
+
+    http = Net::HTTP.new(uri.host, uri.port)
+    request = Net::HTTP::Post.new(uri.request_uri, header)
+    request.body = alerts.to_json
+
+    response = http.request(request)
+
+    LOGGER.info(response)
   end
 end
 
