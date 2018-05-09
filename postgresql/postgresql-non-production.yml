@@ -88,7 +88,7 @@ objects:
       spec:
         containers:
         - name: postgresql
-          image: "172.30.150.55:5000/openshift/postgresql:9.4"
+          image: "172.30.150.55:5000/<NAMESPACE_HERE>/postgresql:9.4"
           ports:
           - containerPort: 5432
             protocol: TCP

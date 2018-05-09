@@ -122,7 +122,7 @@ objects:
                 name: ${SERVICE_NAME}
           - name: MONGODB_SSL_ADDITIONAL_OPTIONS
             value: ${MONGODB_SSL_ADDITIONAL_OPTIONS}
-          image: "172.30.150.55:5000/openshift/mongodb:3.2"
+          image: "172.30.150.55:5000/<NAMESPACE_HERE>/mongodb:3.2"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             initialDelaySeconds: 30
