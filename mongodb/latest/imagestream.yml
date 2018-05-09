@@ -9,14 +9,14 @@ objects:
       openshift.io/display-name: MongoDB
   spec:
     tags:
-    - name: '3.2'
+    - name: '3.4'
       annotations:
-        openshift.io/display-name: MongoDB 3.2
-        description: Provides a MongoDB 3.2 database on CentOS 7. For more information
-          about using this database image, including OpenShift considerations, see https://github.com/sclorg/mongodb-container/tree/master/3.2/README.md.
+        openshift.io/display-name: MongoDB 3.4
+        description: Provides a MongoDB 3.4 database on CentOS 7. For more information
+          about using this database image, including OpenShift considerations, see https://github.com/sclorg/mongodb-container/tree/master/3.4/README.md.
         iconClass: icon-mongodb
         tags: mongodb
-        version: '3.2'
+        version: '3.4'
       from:
         kind: DockerImage
-        name: centos/mongodb-32-centos7:latest
+        name: centos/mongodb-34-centos7:latest
