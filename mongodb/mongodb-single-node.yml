@@ -137,10 +137,10 @@ objects:
             exec:
               command:
               - /bin/sh
-              - -i
-              - -c
-              - source ${CONTAINER_SCRIPTS_PATH}/common.sh && ${MONGO_CMD} 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD
-                --eval="quit()"
+              - '-i'
+              - '-c'
+              - >-
+                mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval="quit()"
             initialDelaySeconds: 3
             timeoutSeconds: 1
           resources:
