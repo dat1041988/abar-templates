@@ -15,7 +15,7 @@ objects:
     output:
       to:
         kind: ImageStreamTag
-        name: 'kibana:6.1.1'
+        name: 'kibana:6.2.4'
     runPolicy: Serial
     source:
       git:

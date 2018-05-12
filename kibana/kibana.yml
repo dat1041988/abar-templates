@@ -10,7 +10,7 @@ message: |-
 metadata:
   annotations:
     description: |-
-      Kibana v6.1.1 service to connect to an Elasticsearch cluster.
+      Kibana v6.2.4 service to connect to an Elasticsearch cluster.
     iconClass: icon-elastic
     openshift.io/display-name: Kibana
     tags: database,analytics,kibana
@@ -72,7 +72,7 @@ objects:
         spec:
           containers:
           - name: kibana
-            image: "172.30.150.55:5000/<NAMESPACE_HERE>/kibana:6.1.1"
+            image: "172.30.150.55:5000/<NAMESPACE_HERE>/kibana:6.2.4"
             imagePullPolicy: IfNotPresent
             env:
             - name: ELASTICSEARCH_URL

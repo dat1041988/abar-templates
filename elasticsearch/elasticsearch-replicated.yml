@@ -14,7 +14,7 @@ message: |-
 metadata:
   annotations:
     description: |-
-      Elasticsearch v6.1.1 service, with persistent storage. For more information about using this template, see https://docs.abarcloud.com/additional-services/elasticsearch.html.
+      Elasticsearch v6.2.4 service, with persistent storage. For more information about using this template, see https://docs.abarcloud.com/additional-services/elasticsearch.html.
 
       NOTE: We recommend at least 3 replicas for production
     iconClass: icon-elastic
@@ -118,7 +118,7 @@ objects:
         spec:
           containers:
             - name: elasticsearch
-              image: "docker.elastic.co/elasticsearch/elasticsearch:6.1.1"
+              image: "docker.elastic.co/elasticsearch/elasticsearch:6.2.4"
               imagePullPolicy: IfNotPresent
               ports:
                 - containerPort: 9200
