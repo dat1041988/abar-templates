@@ -4,7 +4,7 @@ objects:
 - kind: ImageStream
   apiVersion: v1
   metadata:
-    name: postgresql-latest
+    name: postgresql
   spec:
     tags:
     - name: '9.4'
