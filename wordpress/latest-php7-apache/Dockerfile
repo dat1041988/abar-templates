@@ -6,7 +6,7 @@ RUN set -ex; \
 	apt-get update; \
 	apt-get install -y \
 		libjpeg-dev \
-		libpng12-dev \
+		libpng-dev \
 		zlib1g-dev \
 		rsync \
 	; \
@@ -49,7 +49,7 @@ RUN sed -i "/Listen 80/c Listen 8080"                     /etc/apache2/ports.con
 EXPOSE 8080
 
 RUN touch .htaccess wp-config.php && \
-    chown -R 1001:0 /var/www/html /var/lock/ /var/run/ .htaccess wp-config.php && \
+    chgrp -R 0   /var/www/html /var/lock/ /var/run/ .htaccess wp-config.php && \
     chmod -R g+w /var/www/html /var/lock/ /var/run/ .htaccess wp-config.php
 
 USER 1001
