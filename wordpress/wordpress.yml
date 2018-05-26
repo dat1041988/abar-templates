@@ -124,7 +124,7 @@ objects:
                 key: wordpress-table-prefix
                 name: ${SERVICE_NAME}
           livenessProbe:
-            initialDelaySeconds: 30
+            initialDelaySeconds: 300
             tcpSocket:
               port: 8080
             timeoutSeconds: 1
