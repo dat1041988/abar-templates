@@ -15,7 +15,7 @@ objects:
     output:
       to:
         kind: ImageStreamTag
-        name: 'mongodb-primary-router:3.2'
+        name: 'mongodb-primary-router:3.6'
     runPolicy: Serial
     source:
       git:

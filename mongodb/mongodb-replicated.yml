@@ -12,7 +12,7 @@ message: |-
 metadata:
   annotations:
     description: |-
-      MongoDB v3.2 replicated database service, with persistent storage. For more information about using this template, see https://docs.abarcloud.com/additional-services/mongodb.html.
+      MongoDB v3.6 replicated database service, with persistent storage. For more information about using this template, see https://docs.abarcloud.com/additional-services/mongodb.html.
 
       NOTE: We recommend at least 3 replicas to guarantee data reliability
     iconClass: icon-mongodb
@@ -118,7 +118,7 @@ objects:
         spec:
           containers:
             - name: mongo-container
-              image: "172.30.150.55:5000/<NAMESPACE_HERE>/mongodb:3.2"
+              image: "172.30.150.55:5000/<NAMESPACE_HERE>/mongodb:3.6"
               imagePullPolicy: IfNotPresent
               ports:
                 - containerPort: 27017
@@ -212,7 +212,7 @@ objects:
             env:
             - name: MONGODB_SERVICE_NAME
               value: ${SERVICE_NAME}-internal
-            image: "172.30.150.55:5000/<NAMESPACE_HERE>/mongodb-primary-router:3.2"
+            image: "172.30.150.55:5000/<NAMESPACE_HERE>/mongodb-primary-router:3.6"
             imagePullPolicy: Never
             livenessProbe:
               initialDelaySeconds: 30
@@ -311,7 +311,7 @@ parameters:
     description: |-
       The MongoDB SSL mode. This can be allowSSL or preferSSL. Please note that
       requireSSL is not yet supported. Leave this blank if you do not want to
-      enable SSL on the server. This is only supported for MongoDB 3.2
+      enable SSL on the server.
 
   - name: MONGODB_SSL_PEM_KEY_FILE
     displayName: MongoDB SSL PEM Key File
