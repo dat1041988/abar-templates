@@ -18,7 +18,7 @@ objects:
         name: 'mongodb:3.6'
     runPolicy: Serial
     source:
-      contextDir: "latest"
+      contextDir: "3.6"
       git:
         ref: master
         uri: 'https://github.com/abarcloud/mongodb-container.git'
