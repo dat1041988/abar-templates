@@ -5,7 +5,7 @@ Using this template you can backup multiple databases regularly and automaticall
 
 1. [Contact us](https://docs.abarcloud.com/support.html) to get an [object storage](https://docs.abarcloud.com/additional-services/object-storage.html) for your backups, if you don't have one already.
 2. Create a `config.json` file with the connection details for the databases you wish to backup.  
-   See [`config-example.json`](v1/config-example.json) for an example.  
+   See [`config-example.json`](latest/config-example.json) for an example.  
    *NOTE*: If you are backing up a MongoDB replica set you can specify the replica set string as the `host` parameter. See [the MongoDB docs](https://docs.mongodb.com/manual/reference/program/mongodump/) for more information.
 
 3. From dashboard navigate to Add to Project > Browse Catalog > Data Stores > Database Backup
