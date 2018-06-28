@@ -1,5 +1,13 @@
 FROM openshift/jenkins-2-centos7:v3.10
 
-COPY plugins.txt /opt/openshift/configuration/plugins.txt
+USER root
 
-RUN /usr/local/bin/install-plugins.sh /opt/openshift/configuration/plugins.txt
+COPY plugins.txt /opt/openshift/configuration/plugins.txt
+COPY start.sh prepare.sh /
+
+RUN chmod +x /start.sh /prepare.sh && \
+    /prepare.sh && \
+    chgrp -R 0 /usr/jenkins-installed && \
+    chmod -R g=u /usr/jenkins-installed
+
+CMD /start.sh
