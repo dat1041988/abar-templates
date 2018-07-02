@@ -7,7 +7,7 @@ ENV JAVA_HOME=/usr/lib/jvm/jre-1.8.0-openjdk \
 
 COPY fix-permissions /usr/local/bin
 
-RUN INSTALL_PKGS="gettext tar zip unzip hostname java-1.8.0-openjdk" && \
+RUN INSTALL_PKGS="gettext tar zip unzip hostname java-1.8.0-openjdk openssl" && \
     yum install -y $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS && \
     yum clean all  && \
@@ -18,4 +18,17 @@ RUN INSTALL_PKGS="gettext tar zip unzip hostname java-1.8.0-openjdk" && \
 
 WORKDIR "/opt/kafka"
 
-EXPOSE 9092
+RUN sed -i "/listeners=/c listeners=SSL://:9093" config/server.properties
+RUN sed -i "/listener.security.protocol.map=/c listener.security.protocol.map=SSL:SSL" config/server.properties
+RUN echo $'\n\
+    ssl.client.auth=required\n\
+    security.protocol=SSL\n\
+    security.inter.broker.protocol=SSL\n\
+    ssl.keystore.location=/var/private/ssl/kafka.server.keystore.jks\n\
+    ssl.keystore.password=test1234\n\
+    ssl.key.password=test1234\n\
+    ssl.truststore.location=/var/private/ssl/kafka.server.truststore.jks\n\
+    ssl.truststore.password=test1234\n'\
+>> config/server.properties
+
+EXPOSE 9093
