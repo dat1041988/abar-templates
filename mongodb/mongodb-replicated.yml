@@ -118,7 +118,7 @@ objects:
         spec:
           containers:
             - name: mongo-container
-              image: "172.30.150.55:5000/<NAMESPACE_HERE>/mongodb:3.6"
+              image: "docker-registry.default.svc:5000/<NAMESPACE_HERE>/mongodb:3.6"
               imagePullPolicy: IfNotPresent
               ports:
                 - containerPort: 27017
@@ -212,7 +212,7 @@ objects:
             env:
             - name: MONGODB_SERVICE_NAME
               value: ${SERVICE_NAME}-internal
-            image: "172.30.150.55:5000/<NAMESPACE_HERE>/mongodb-primary-router:3.6"
+            image: "docker-registry.default.svc:5000/<NAMESPACE_HERE>/mongodb-primary-router:3.6"
             imagePullPolicy: Never
             livenessProbe:
               initialDelaySeconds: 30

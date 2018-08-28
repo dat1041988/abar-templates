@@ -157,6 +157,7 @@ objects:
         - metadata:
             name: elasticsearch-data
           spec:
+            storageClassName: glusterfs-storage-nocache
             # the volume can be mounted as read-write by a single node
             accessModes: [ ReadWriteOnce ]
             resources:

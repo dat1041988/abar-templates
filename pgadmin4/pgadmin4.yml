@@ -69,7 +69,7 @@ objects:
         spec:
           containers:
           - name: pgadmin4
-            image: "172.30.150.55:5000/<NAMESPACE_HERE>/pgadmin4:3"
+            image: "docker-registry.default.svc:5000/<NAMESPACE_HERE>/pgadmin4:3"
             imagePullPolicy: IfNotPresent
             env:
             - name: DEFAULT_USER

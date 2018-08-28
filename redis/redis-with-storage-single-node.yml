@@ -78,7 +78,7 @@ objects:
       spec:
         containers:
         - name: redis
-          image: "172.30.150.55:5000/<NAMESPACE_HERE>/redis:4.0.6"
+          image: "docker-registry.default.svc:5000/<NAMESPACE_HERE>/redis:4.0.6"
           imagePullPolicy: IfNotPresent
           ports:
           - containerPort: 6379

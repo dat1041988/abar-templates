@@ -1,4 +1,4 @@
-FROM 172.30.150.55:5000/openshift/rabbitmq:3.6
+FROM docker-registry.default.svc:5000/openshift/rabbitmq:3.6
 
 RUN rabbitmq-plugins enable --offline rabbitmq_management
 

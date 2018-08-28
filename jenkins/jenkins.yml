@@ -76,7 +76,7 @@ objects:
         - env:
           - name: JENKINS_PASSWORD
             value: ${JENKINS_PASSWORD}
-          image: "172.30.150.55:5000/<NAMESPACE_HERE>/jenkins:2-centos7-oc-v3.10"
+          image: "docker-registry.default.svc:5000/<NAMESPACE_HERE>/jenkins:2-centos7-oc-v3.10"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 2

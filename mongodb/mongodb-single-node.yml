@@ -122,7 +122,7 @@ objects:
                 name: ${SERVICE_NAME}
           - name: MONGODB_SSL_ADDITIONAL_OPTIONS
             value: ${MONGODB_SSL_ADDITIONAL_OPTIONS}
-          image: "172.30.150.55:5000/<NAMESPACE_HERE>/mongodb:3.6"
+          image: "docker-registry.default.svc:5000/<NAMESPACE_HERE>/mongodb:3.6"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             initialDelaySeconds: 30

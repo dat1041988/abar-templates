@@ -43,7 +43,7 @@ objects:
           deploymentconfig: ${SERVICE_NAME}
       spec:
         containers:
-          - image: "172.30.150.55:5000/<NAMESPACE_HERE>/redis-commander:0.4.5"
+          - image: "docker-registry.default.svc:5000/<NAMESPACE_HERE>/redis-commander:0.4.5"
             imagePullPolicy: IfNotPresent
             name: ${SERVICE_NAME}
             env:

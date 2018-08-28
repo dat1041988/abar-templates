@@ -86,7 +86,7 @@ objects:
         serviceAccount: ${SERVICE_NAME}
         containers:
         - name: notifier
-          image: "172.30.150.55:5000/<NAMESPACE_HERE>/openshift-notifier:latest"
+          image: "docker-registry.default.svc:5000/<NAMESPACE_HERE>/openshift-notifier:latest"
           imagePullPolicy: Always
           env:
           - name: NOTIFICATION_LEVEL

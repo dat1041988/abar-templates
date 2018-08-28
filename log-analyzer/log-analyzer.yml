@@ -47,7 +47,7 @@ objects:
       spec:
         containers:
           - name: log-analyzer
-            image: "172.30.150.55:5000/<NAMESPACE_HERE>/log-analyzer:1.0"
+            image: "docker-registry.default.svc:5000/<NAMESPACE_HERE>/log-analyzer:1.0"
             imagePullPolicy: Always
             env:
             - name: OSS_ACCESS_KEY_ID

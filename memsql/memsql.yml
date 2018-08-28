@@ -51,7 +51,7 @@ objects:
           deploymentconfig: ${SERVICE_NAME}
       spec:
         containers:
-          - image: "172.30.150.55:5000/<NAMESPACE_HERE>/memsql:6.0.14"
+          - image: "docker-registry.default.svc:5000/<NAMESPACE_HERE>/memsql:6.0.14"
             imagePullPolicy: IfNotPresent
             name: memsql
             ports:
